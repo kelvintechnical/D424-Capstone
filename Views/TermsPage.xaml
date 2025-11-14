@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="StudentProgressTracker.Views.TermsPage"
+             xmlns:viewmodels="clr-namespace:StudentProgressTracker.ViewModels"
+             xmlns:models="clr-namespace:StudentProgressTracker.Models"
+             x:DataType="viewmodels:TermsViewModel"
+             Title="Academic Terms">
+    <Grid RowDefinitions="Auto,*,Auto" Padding="16">
+        <Label Text="Academic Terms" Style="{StaticResource Headline}" />
+
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Terms}" SelectionMode="None">
+            <CollectionView.EmptyView>
+                <Label Text="No terms yet. Tap + Add Term to get started." TextColor="{StaticResource Charcoal}" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:AcademicTerm">
+                    <Frame Padding="12" Margin="0,8" HasShadow="False" BorderColor="{StaticResource Gray200}">
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.TermTappedCommand}"
+                                                  CommandParameter="{Binding .}" />
+                        </Frame.GestureRecognizers>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Label Text="{Binding Title}" FontAttributes="Bold" TextColor="{StaticResource Charcoal}" />
+                            <Label Grid.Row="1"
+                                   Text="{Binding StartDate, StringFormat='{}{0:MMM dd, yyyy}'}">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding StartDate, StringFormat='{}{0:MMM dd, yyyy}'}" />
+                                        <Span Text=" - " />
+                                        <Span Text="{Binding EndDate, StringFormat='{}{0:MMM dd, yyyy}'}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" VerticalOptions="End">
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" HorizontalOptions="Start" />
+            <Button Grid.Column="1" Text="+ Add Term" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding AddCommand}" />
+        </Grid>
+    </Grid>
+</ContentPage>
+
+
+
+
+
+

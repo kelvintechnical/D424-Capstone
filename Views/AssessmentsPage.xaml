@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="StudentProgressTracker.Views.AssessmentsPage"
+             xmlns:viewmodels="clr-namespace:StudentProgressTracker.ViewModels"
+             x:DataType="viewmodels:AssessmentViewModel"
+             Title="Assessments">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <Label Text="Assessments" Style="{StaticResource Headline}" />
+
+            <VerticalStackLayout>
+                <Label Text="Objective Assessment" FontAttributes="Bold" />
+                <Entry Placeholder="Name" Text="{Binding ObjectiveAssessment.Name}" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <VerticalStackLayout>
+                        <Label Text="Start" />
+                        <DatePicker Date="{Binding ObjectiveAssessment.StartDate}" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label Text="Due" />
+                        <DatePicker Date="{Binding ObjectiveAssessment.DueDate}" />
+                    </VerticalStackLayout>
+                </Grid>
+                <HorizontalStackLayout Spacing="12">
+                    <Switch IsToggled="{Binding ObjectiveAssessment.NotificationsEnabled}" />
+                    <Label Text="Enable Notifications" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="12">
+                    <Button Text="Add" Command="{Binding AddObjectiveCommand}" />
+                    <Button Text="Save" Command="{Binding SaveObjectiveCommand}" />
+                    <Button Text="Delete" Command="{Binding DeleteObjectiveCommand}" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout>
+                <Label Text="Performance Assessment" FontAttributes="Bold" />
+                <Entry Placeholder="Name" Text="{Binding PerformanceAssessment.Name}" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <VerticalStackLayout>
+                        <Label Text="Start" />
+                        <DatePicker Date="{Binding PerformanceAssessment.StartDate}" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label Text="Due" />
+                        <DatePicker Date="{Binding PerformanceAssessment.DueDate}" />
+                    </VerticalStackLayout>
+                </Grid>
+                <HorizontalStackLayout Spacing="12">
+                    <Switch IsToggled="{Binding PerformanceAssessment.NotificationsEnabled}" />
+                    <Label Text="Enable Notifications" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="12">
+                    <Button Text="Add" Command="{Binding AddPerformanceCommand}" />
+                    <Button Text="Save" Command="{Binding SavePerformanceCommand}" />
+                    <Button Text="Delete" Command="{Binding DeletePerformanceCommand}" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
+
+
+
+
+
+

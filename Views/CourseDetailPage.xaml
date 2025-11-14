@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="StudentProgressTracker.Views.CourseDetailPage"
+             xmlns:viewmodels="clr-namespace:StudentProgressTracker.ViewModels"
+             xmlns:models="clr-namespace:StudentProgressTracker.Models"
+             x:DataType="viewmodels:CourseDetailViewModel"
+             Title="Course Details">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <Label Text="Course Details" Style="{StaticResource Headline}" />
+
+            <VerticalStackLayout>
+                <Label Text="Title" />
+                <Entry Text="{Binding Course.Title}" />
+
+                <Label Text="Status" />
+                <Picker ItemsSource="{Binding CourseStatusOptions}" SelectedItem="{Binding SelectedStatus}" />
+
+                <Label Text="Dates" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <VerticalStackLayout>
+                        <Label Text="Start" />
+                        <DatePicker Date="{Binding StartDate}" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label Text="End" />
+                        <DatePicker Date="{Binding EndDate}" />
+                    </VerticalStackLayout>
+                </Grid>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout>
+                <Label Text="Instructor" />
+                <Entry Placeholder="Name" Text="{Binding Instructor.Name}" />
+                <Entry Placeholder="Phone" Text="{Binding Instructor.Phone}" Keyboard="Telephone" />
+                <Entry Placeholder="Email" Text="{Binding Instructor.Email}" Keyboard="Email" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout>
+                <Label Text="Notifications" />
+                <Switch IsToggled="{Binding Course.NotificationsEnabled}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout>
+                <Label Text="Notes" />
+                <Editor Text="{Binding Notes}" AutoSize="TextChanges" HeightRequest="120" />
+                <Button Text="Share Notes" Command="{Binding ShareNotesCommand}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout>
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Assessments" />
+                    <Button Grid.Column="1" Text="Manage Assessments" Command="{Binding ManageAssessmentsCommand}" Style="{StaticResource SecondaryButtonStyle}" />
+                </Grid>
+                <CollectionView ItemsSource="{Binding Assessments}">
+                    <CollectionView.EmptyView>
+                        <Label Text="No assessments yet. Tap 'Manage Assessments' to add them." TextColor="{StaticResource Gray600}" HorizontalTextAlignment="Center" Margin="0,12" />
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Assessment">
+                            <Frame Padding="8" Margin="0,4" HasShadow="False" BorderColor="{StaticResource Gray200}">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AssessmentTappedCommand}"
+                                                          CommandParameter="{Binding .}" />
+                                </Frame.GestureRecognizers>
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8">
+                                    <Label Text="{Binding Name}" FontAttributes="Bold" Grid.ColumnSpan="2" />
+                                    <Label Grid.Row="1">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding Type}" />
+                                                <Span Text="  •  " />
+                                                <Span Text="{Binding DueDate, StringFormat='Due {0:MMM dd, yyyy}'}" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <Grid ColumnDefinitions="*,Auto" VerticalOptions="End">
+                <ActivityIndicator IsVisible="{Binding IsSaving}" IsRunning="{Binding IsSaving}" />
+                <HorizontalStackLayout Grid.Column="1" Spacing="12">
+                    <Button Text="Delete" Command="{Binding DeleteCommand}" BackgroundColor="{StaticResource Gray400}" TextColor="{StaticResource White}" />
+                    <Button Text="Save Course" Command="{Binding SaveCommand}" />
+                </HorizontalStackLayout>
+            </Grid>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
+
+
+
+
+
+

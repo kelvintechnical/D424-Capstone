@@ -32,7 +32,13 @@ public partial class AssessmentViewModel : ObservableObject
 		{
 			Assessments.Clear();
 			var list = await _db.GetAssessmentsByCourseAsync(courseId);
-			foreach (var a in list) { Assessments.Add(a); }
+			foreach (var a in list) 
+			{ 
+				// Convert UTC dates to local for display in date pickers
+				a.StartDate = ConvertUtcToLocal(a.StartDate);
+				a.DueDate = ConvertUtcToLocal(a.DueDate);
+				Assessments.Add(a); 
+			}
 			ObjectiveAssessment = list.FirstOrDefault(a => a.Type == AssessmentType.Objective.ToString());
 			PerformanceAssessment = list.FirstOrDefault(a => a.Type == AssessmentType.Performance.ToString());
 			CanAddAssessment = list.Count < 2;
@@ -92,7 +98,7 @@ public partial class AssessmentViewModel : ObservableObject
 		{
 			if (ObjectiveAssessment is not null)
 			{
-				await Application.Current.MainPage.DisplayAlert("Already Exists", "Objective assessment already exists. Please edit or delete it first.", "OK");
+                await Application.Current.Windows[0].Page.DisplayAlert("Already Exists", "Objective assessment already exists. Please edit or delete it first.", "OK");
 				return;
 			}
 
@@ -107,11 +113,11 @@ public partial class AssessmentViewModel : ObservableObject
 				CreatedAt = DateTime.UtcNow
 			};
 			await SaveAssessmentAsync(a);
-			await Application.Current.MainPage.DisplayAlert("Success", "Objective assessment added", "OK");
+            await Application.Current.Windows[0].Page.DisplayAlert("Success", "Objective assessment added", "OK");
 		}
 		catch (Exception ex)
 		{
-			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to add assessment: {ex.Message}", "OK");
+            await Application.Current.Windows[0].Page.DisplayAlert("Error", $"Failed to add assessment: {ex.Message}", "OK");
 		}
 	}
 
@@ -122,7 +128,7 @@ public partial class AssessmentViewModel : ObservableObject
 		{
 			if (PerformanceAssessment is not null)
 			{
-				await Application.Current.MainPage.DisplayAlert("Already Exists", "Performance assessment already exists. Please edit or delete it first.", "OK");
+                await Application.Current.Windows[0].Page.DisplayAlert("Already Exists", "Performance assessment already exists. Please edit or delete it first.", "OK");
 				return;
 			}
 
@@ -137,11 +143,11 @@ public partial class AssessmentViewModel : ObservableObject
 				CreatedAt = DateTime.UtcNow
 			};
 			await SaveAssessmentAsync(a);
-			await Application.Current.MainPage.DisplayAlert("Success", "Performance assessment added", "OK");
+            await Application.Current.Windows[0].Page.DisplayAlert("Success", "Performance assessment added", "OK");
 		}
 		catch (Exception ex)
 		{
-			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to add assessment: {ex.Message}", "OK");
+            await Application.Current.Windows[0].Page.DisplayAlert("Error", $"Failed to add assessment: {ex.Message}", "OK");
 		}
 	}
 
@@ -152,11 +158,11 @@ public partial class AssessmentViewModel : ObservableObject
 		{
 			if (ObjectiveAssessment is null) return;
 			await SaveAssessmentAsync(ObjectiveAssessment);
-			await Application.Current.MainPage.DisplayAlert("Success", "Objective assessment saved", "OK");
+            await Application.Current.Windows[0].Page.DisplayAlert("Success", "Objective assessment saved", "OK");
 		}
 		catch (Exception ex)
 		{
-			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to save assessment: {ex.Message}", "OK");
+            await Application.Current.Windows[0].Page.DisplayAlert("Error", $"Failed to save assessment: {ex.Message}", "OK");
 		}
 	}
 
@@ -167,11 +173,11 @@ public partial class AssessmentViewModel : ObservableObject
 		{
 			if (PerformanceAssessment is null) return;
 			await SaveAssessmentAsync(PerformanceAssessment);
-			await Application.Current.MainPage.DisplayAlert("Success", "Performance assessment saved", "OK");
+            await Application.Current.Windows[0].Page.DisplayAlert("Success", "Performance assessment saved", "OK");
 		}
 		catch (Exception ex)
 		{
-			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to save assessment: {ex.Message}", "OK");
+            await Application.Current.Windows[0].Page.DisplayAlert("Error", $"Failed to save assessment: {ex.Message}", "OK");
 		}
 	}
 
@@ -182,7 +188,7 @@ public partial class AssessmentViewModel : ObservableObject
 		{
 			if (ObjectiveAssessment is null) return;
 
-			bool confirm = await Application.Current.MainPage.DisplayAlert(
+			bool confirm = await Application.Current.Windows[0].Page.DisplayAlert(
 				"Delete Assessment",
 				$"Are you sure you want to delete '{ObjectiveAssessment.Name}'?",
 				"Delete",
@@ -191,11 +197,11 @@ public partial class AssessmentViewModel : ObservableObject
 			if (!confirm) return;
 
 			await DeleteAssessmentAsync(ObjectiveAssessment);
-			await Application.Current.MainPage.DisplayAlert("Success", "Objective assessment deleted", "OK");
+            await Application.Current.Windows[0].Page.DisplayAlert("Success", "Objective assessment deleted", "OK");
 		}
 		catch (Exception ex)
 		{
-			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to delete assessment: {ex.Message}", "OK");
+            await Application.Current.Windows[0].Page.DisplayAlert("Error", $"Failed to delete assessment: {ex.Message}", "OK");
 		}
 	}
 
@@ -206,7 +212,7 @@ public partial class AssessmentViewModel : ObservableObject
 		{
 			if (PerformanceAssessment is null) return;
 
-			bool confirm = await Application.Current.MainPage.DisplayAlert(
+			bool confirm = await Application.Current.Windows[0].Page.DisplayAlert(
 				"Delete Assessment",
 				$"Are you sure you want to delete '{PerformanceAssessment.Name}'?",
 				"Delete",
@@ -215,11 +221,11 @@ public partial class AssessmentViewModel : ObservableObject
 			if (!confirm) return;
 
 			await DeleteAssessmentAsync(PerformanceAssessment);
-			await Application.Current.MainPage.DisplayAlert("Success", "Performance assessment deleted", "OK");
+            await Application.Current.Windows[0].Page.DisplayAlert("Success", "Performance assessment deleted", "OK");
 		}
 		catch (Exception ex)
 		{
-			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to delete assessment: {ex.Message}", "OK");
+            await Application.Current.Windows[0].Page.DisplayAlert("Error", $"Failed to delete assessment: {ex.Message}", "OK");
 		}
 	}
 }

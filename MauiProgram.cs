@@ -37,11 +37,13 @@ public static class MauiProgram
 
 		// ViewModels
 		builder.Services.AddSingleton<TermsViewModel>();
+		builder.Services.AddSingleton<TermDetailViewModel>();
 		builder.Services.AddSingleton<CourseListViewModel>();
 		builder.Services.AddSingleton<CourseDetailViewModel>();
 		builder.Services.AddSingleton<AssessmentViewModel>();
+        builder.Services.AddSingleton<IAlertService, AlertService>();
 
-		var app = builder.Build();
+        var app = builder.Build();
 
 		// Initialize
 		try

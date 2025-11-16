@@ -16,26 +16,34 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:AcademicTerm">
                     <Frame Padding="12" Margin="0,8" HasShadow="False" BorderColor="{StaticResource Gray200}">
-                        <Frame.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.TermTappedCommand}"
-                                                  CommandParameter="{Binding .}" />
-                        </Frame.GestureRecognizers>
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Label Text="{Binding Title}" FontAttributes="Bold" TextColor="{StaticResource Charcoal}" />
-                            <Label Grid.Row="1"
-                                   Text="{Binding StartDate, StringFormat='{}{0:MMM dd, yyyy}'}">
-                                <Label.FormattedText>
-                                    <FormattedString>
-                                        <Span Text="{Binding StartDate, StringFormat='{}{0:MMM dd, yyyy}'}" />
-                                        <Span Text=" - " />
-                                        <Span Text="{Binding EndDate, StringFormat='{}{0:MMM dd, yyyy}'}" />
-                                    </FormattedString>
-                                </Label.FormattedText>
-                            </Label>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.TermTappedCommand}"
+                                                      CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
+                            <Grid Grid.Column="0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Label Text="{Binding Title}" FontAttributes="Bold" TextColor="{StaticResource Charcoal}" />
+                                <Label Grid.Row="1"
+                                       Text="{Binding StartDate, StringFormat='{}{0:MMM dd, yyyy}'}">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding StartDate, StringFormat='{}{0:MMM dd, yyyy}'}" />
+                                            <Span Text=" - " />
+                                            <Span Text="{Binding EndDate, StringFormat='{}{0:MMM dd, yyyy}'}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                            </Grid>
+                            <Button Grid.Column="1" 
+                                    Text="Edit" 
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditTermCommand}"
+                                    CommandParameter="{Binding .}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Margin="8,0,0,0" />
                         </Grid>
                     </Frame>
                 </DataTemplate>

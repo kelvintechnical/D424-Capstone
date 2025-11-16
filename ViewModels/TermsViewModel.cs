@@ -95,68 +95,31 @@ public partial class TermsViewModel : ObservableObject
 	{
 		try
 		{
-			// Prompt user for term details
-			string title = await Application.Current.MainPage.DisplayPromptAsync(
-				"New Term",
-				"Enter term title (e.g., Spring 2025):",
-				placeholder: "Term Title",
-				maxLength: 50);
-
-			if (string.IsNullOrWhiteSpace(title))
-				return;
-
-			// Get start date
-			var startDateStr = await Application.Current.MainPage.DisplayPromptAsync(
-				"Start Date",
-				"Enter start date (MM/DD/YYYY):",
-				placeholder: "MM/DD/YYYY",
-				keyboard: Keyboard.Default);
-
-			if (string.IsNullOrWhiteSpace(startDateStr))
-				return;
-
-			if (!DateTime.TryParse(startDateStr, out DateTime startDate))
-			{
-				await Application.Current.MainPage.DisplayAlert("Error", "Invalid start date format", "OK");
-				return;
-			}
-
-			// Get end date
-			var endDateStr = await Application.Current.MainPage.DisplayPromptAsync(
-				"End Date",
-				"Enter end date (MM/DD/YYYY):",
-				placeholder: "MM/DD/YYYY",
-				keyboard: Keyboard.Default);
-
-			if (string.IsNullOrWhiteSpace(endDateStr))
-				return;
-
-			if (!DateTime.TryParse(endDateStr, out DateTime endDate))
-			{
-				await Application.Current.MainPage.DisplayAlert("Error", "Invalid end date format", "OK");
-				return;
-			}
-
+			// Create new term with default values
 			var newTerm = new AcademicTerm
 			{
-				Title = title,
-				StartDate = startDate.ToUniversalTime(),
-				EndDate = endDate.ToUniversalTime()
+				Title = "New Term",
+				StartDate = DateTime.UtcNow,
+				EndDate = DateTime.UtcNow.AddMonths(4)
 			};
 
-			if (!newTerm.IsValid())
-			{
-				await Application.Current.MainPage.DisplayAlert("Error", "End date must be after start date", "OK");
-				return;
-			}
+			await _db.SaveTermAsync(newTerm);
+			Terms.Add(newTerm);
 
-			await AddTermAsync(newTerm);
-			await Application.Current.MainPage.DisplayAlert("Success", "Term added successfully", "OK");
+			// Navigate to detail page for editing with date pickers
+			await Shell.Current.GoToAsync($"{nameof(Views.TermDetailPage)}?termId={newTerm.Id}");
 		}
 		catch (Exception ex)
 		{
 			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to add term: {ex.Message}", "OK");
 		}
+	}
+
+	[RelayCommand]
+	private async Task EditTermAsync(AcademicTerm term)
+	{
+		if (term == null) return;
+		await Shell.Current.GoToAsync($"{nameof(Views.TermDetailPage)}?termId={term.Id}");
 	}
 
 	[RelayCommand]

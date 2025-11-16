@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.company.studentprogresstracker">
+
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+	<application android:label="Student Progress Tracker"
+				 android:usesCleartextTraffic="false">
+		<!-- MAUI injects activities/services automatically -->
+	</application>
+</manifest>

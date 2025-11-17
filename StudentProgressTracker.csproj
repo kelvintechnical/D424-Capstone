@@ -58,22 +58,80 @@
 		<PackageReference Include="Plugin.LocalNotification" Version="12.0.2" />
 	</ItemGroup>
 
-	<!-- Exclude conflicting AndroidX Collection.Ktx package -->
+	<!-- Exclude conflicting AndroidX Collection.Ktx package early in the build -->
 	<Target Name="ExcludeConflictingAndroidXPackages" BeforeTargets="_ResolveLibraryProjectImports">
 		<ItemGroup>
 			<_AndroidLibraryImports Remove="@(_AndroidLibraryImports)" Condition="$([System.String]::Copy('%(Identity)').Contains('androidx.collection.collection-ktx.jar'))" />
+			<_AndroidLibraryImports Remove="@(_AndroidLibraryImports)" Condition="$([System.String]::Copy('%(Identity)').Contains('collection-ktx'))" />
+			<_AndroidLibraryImports Remove="@(_AndroidLibraryImports)" Condition="$([System.String]::Copy('%(Identity)').Contains('Xamarin.AndroidX.Collection.Ktx'))" />
 		</ItemGroup>
 	</Target>
 	
-	<!-- Remove conflicting ktx JAR file from disk and D8 inputs -->
+	<!-- Remove conflicting ktx JAR references before CheckDuplicateJavaLibraries -->
+	<Target Name="RemoveKtxBeforeDuplicateCheck" BeforeTargets="CheckDuplicateJavaLibraries">
+		<!-- First, collect all KTX-related entries to remove - match on various path patterns -->
+		<ItemGroup>
+			<_KtxToRemove Include="@(_AndroidLibraryImports)" Condition="$([System.String]::Copy('%(Identity)').Contains('collection-ktx'))" />
+			<_KtxToRemove Include="@(_AndroidLibraryImports)" Condition="$([System.String]::Copy('%(Identity)').Contains('Xamarin.AndroidX.Collection.Ktx'))" />
+			<_KtxToRemove Include="@(_AndroidLibraryImports)" Condition="$([System.String]::Copy('%(FullPath)').Contains('collection-ktx'))" />
+			<!-- Match on the specific problematic path patterns -->
+			<_KtxToRemove Include="@(_AndroidLibraryImports)" Condition="$([System.String]::Copy('%(Identity)').Contains('xamarin.androidx.collection.ktx'))" />
+			<_KtxToRemove Include="@(_AndroidLibraryImports)" Condition="$([System.String]::Copy('%(Identity)').Contains('buildTransitive')) And $([System.String]::Copy('%(Identity)').Contains('ktx'))" />
+			<!-- Match on the resolved path pattern too -->
+			<_KtxToRemove Include="@(_AndroidLibraryImports)" Condition="$([System.String]::Copy('%(Identity)').Contains('androidx.collection.collection-ktx.jar'))" />
+		</ItemGroup>
+		
+		<!-- Remove all collected KTX entries -->
+		<ItemGroup>
+			<_AndroidLibraryImports Remove="@(_KtxToRemove)" />
+		</ItemGroup>
+		
+		<Message Text="Removed @(_KtxToRemove->Count()) KTX references before duplicate check" Importance="high" />
+		<Message Text="KTX entries removed: @(_KtxToRemove->'%(Identity)')" Importance="normal" Condition="'@(_KtxToRemove)' != ''" />
+	</Target>
+	
+	<!-- Also filter out non-existent files that might cause FileNotFoundException -->
+	<Target Name="FilterNonExistentKtxFiles" BeforeTargets="CheckDuplicateJavaLibraries" AfterTargets="RemoveKtxBeforeDuplicateCheck">
+		<ItemGroup>
+			<_NonExistentKtx Include="@(_AndroidLibraryImports)" 
+				Condition="!Exists('%(Identity)') And ($([System.String]::Copy('%(Identity)').Contains('collection-ktx')) Or $([System.String]::Copy('%(Identity)').Contains('ktx')))" />
+		</ItemGroup>
+		<ItemGroup>
+			<_AndroidLibraryImports Remove="@(_NonExistentKtx)" />
+		</ItemGroup>
+		<Message Text="Filtered out @(_NonExistentKtx->Count()) non-existent KTX files" Importance="high" Condition="'@(_NonExistentKtx)' != ''" />
+	</Target>
+	
+	<!-- Create dummy KTX JAR file if it's referenced but missing (prevents FileNotFoundException) -->
+	<Target Name="CreateDummyKtxJar" BeforeTargets="CheckDuplicateJavaLibraries">
+		<PropertyGroup>
+			<_KtxJarDir>C:\Users\$(USERNAME)\.nuget\packages\xamarin.androidx.collection.ktx\1.2.0.9\jar</_KtxJarDir>
+			<_KtxJarPath>$(_KtxJarDir)\androidx.collection.collection-ktx.jar</_KtxJarPath>
+		</PropertyGroup>
+		<!-- Create directory if it doesn't exist -->
+		<MakeDir Directories="$(_KtxJarDir)" Condition="!Exists('$(_KtxJarDir)')" ContinueOnError="true" />
+		<!-- Create empty dummy JAR file to prevent FileNotFoundException -->
+		<WriteLinesToFile 
+			File="$(_KtxJarPath)" 
+			Lines=""
+			Condition="!Exists('$(_KtxJarPath)')"
+			ContinueOnError="true" />
+		<Message Text="Created dummy KTX JAR at $(_KtxJarPath)" Importance="normal" Condition="Exists('$(_KtxJarPath)')" />
+	</Target>
+	
+	<!-- Remove conflicting ktx JAR file from D8 inputs after library resolution -->
 	<Target Name="RemoveConflictingKtxJar" AfterTargets="_ResolveLibraryProjectImports" BeforeTargets="_CreateDexInputs">
 		<ItemGroup>
-			<_KtxJars Include="C:\Users\kelvi\.nuget\packages\xamarin.androidx.collection.ktx\**\androidx.collection.collection-ktx.jar" />
-		</ItemGroup>
-		<Delete Files="@(_KtxJars)" ContinueOnError="true" />
-		<Message Text="Attempted to delete ktx JAR files: @(_KtxJars)" Importance="high" />
-		<ItemGroup>
 			<_D8InputJars Remove="@(_D8InputJars)" Condition="$([System.String]::Copy('%(FullPath)').Contains('collection-ktx.jar'))" />
+			<_D8InputJars Remove="@(_D8InputJars)" Condition="$([System.String]::Copy('%(FullPath)').Contains('collection-ktx'))" />
+			<_D8InputClasses Remove="@(_D8InputClasses)" Condition="$([System.String]::Copy('%(FullPath)').Contains('collection-ktx'))" />
+		</ItemGroup>
+	</Target>
+	
+	<!-- Remove from _AndroidAarImports as well -->
+	<Target Name="RemoveKtxFromAarImports" AfterTargets="_ResolveLibraryProjectImports" BeforeTargets="_CreateDexInputs">
+		<ItemGroup>
+			<_AndroidAarImports Remove="@(_AndroidAarImports)" Condition="$([System.String]::Copy('%(Identity)').Contains('collection-ktx'))" />
 		</ItemGroup>
 	</Target>
 	
@@ -81,8 +139,10 @@
 	<Target Name="FinalRemoveKtxJarFromD8" BeforeTargets="_CompileToDalvik">
 		<ItemGroup>
 			<_D8InputJars Remove="@(_D8InputJars)" Condition="$([System.String]::Copy('%(FullPath)').Contains('collection-ktx.jar'))" />
+			<_D8InputJars Remove="@(_D8InputJars)" Condition="$([System.String]::Copy('%(FullPath)').Contains('collection-ktx'))" />
+			<_D8InputClasses Remove="@(_D8InputClasses)" Condition="$([System.String]::Copy('%(FullPath)').Contains('collection-ktx'))" />
 		</ItemGroup>
-		<Message Text="Final D8 cleanup: Removed ktx JARs" Importance="high" />
+		<Message Text="Final D8 cleanup: Removed ktx JARs and classes" Importance="high" />
 	</Target>
 
 </Project>

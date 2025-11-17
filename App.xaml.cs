@@ -4,12 +4,31 @@ public partial class App : Application
 {
 	public App()
 	{
-		InitializeComponent();
+		try
+		{
+			InitializeComponent();
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"[App] InitializeComponent failed: {ex.Message}");
+			System.Diagnostics.Debug.WriteLine($"[App] Stack trace: {ex.StackTrace}");
+			throw;
+		}
 	}
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		return new Window(new AppShell()) { Title = "StudentProgressTracker" };
+		try
+		{
+			var shell = new AppShell();
+			return new Window(shell) { Title = "StudentProgressTracker" };
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"[App] CreateWindow failed: {ex.Message}");
+			System.Diagnostics.Debug.WriteLine($"[App] Stack trace: {ex.StackTrace}");
+			throw;
+		}
 	}
 }
 

@@ -53,45 +53,45 @@ public static class MauiProgram
 		// Set ServiceHelper immediately so UI can access services
 		ServiceHelper.Services = app.Services;
 
-		// Initialize database asynchronously (don't block window creation)
-		// Use Task.Run to avoid blocking the UI thread
-		_ = Task.Run(async () =>
+		// Initialize database - ensure it's ready before UI loads
+		// Use a background task that completes quickly
+		try
 		{
-			try
+			var db = app.Services.GetRequiredService<DatabaseService>();
+			DatabaseService.Current = db;
+			
+			// Initialize on background thread to avoid blocking UI
+			// This ensures database is ready before page loads data
+			var initTask = Task.Run(async () =>
 			{
-				// Small delay to ensure UI is ready
-				await Task.Delay(500);
-				
-				var db = app.Services.GetRequiredService<DatabaseService>();
-				DatabaseService.Current = db;
-				await db.InitializeAsync();
-#if DEBUG
-				System.Diagnostics.Debug.WriteLine("[MauiProgram] Database initialized successfully");
-#endif
-			}
-			catch (Exception ex)
-			{
-#if DEBUG
-				System.Diagnostics.Debug.WriteLine($"[MauiProgram] Initialization error: {ex}");
-				System.Diagnostics.Debug.WriteLine($"[MauiProgram] Exception Type: {ex.GetType().Name}");
-				System.Diagnostics.Debug.WriteLine($"[MauiProgram] Exception Message: {ex.Message}");
-				if (ex.InnerException != null)
+				try
 				{
-					System.Diagnostics.Debug.WriteLine($"[MauiProgram] Inner Exception: {ex.InnerException.Message}");
-				}
-				System.Diagnostics.Debug.WriteLine($"[MauiProgram] Stack Trace: {ex.StackTrace}");
-				// Don't break here - let window appear, error is logged
-#endif
-			}
-		}).ContinueWith(task =>
-		{
-			if (task.IsFaulted)
-			{
+					await db.InitializeAsync();
 #if DEBUG
-				System.Diagnostics.Debug.WriteLine($"[MauiProgram] Task faulted: {task.Exception?.GetBaseException()?.Message}");
+					System.Diagnostics.Debug.WriteLine("[MauiProgram] Database initialized successfully");
 #endif
-			}
-		}, TaskContinuationOptions.OnlyOnFaulted);
+				}
+				catch (Exception ex)
+				{
+#if DEBUG
+					System.Diagnostics.Debug.WriteLine($"[MauiProgram] Database initialization failed: {ex.Message}");
+#endif
+				}
+			});
+			
+			// On Android, wait a short time for initialization to complete
+			// This prevents race conditions but doesn't block indefinitely
+#if ANDROID
+			initTask.Wait(TimeSpan.FromSeconds(2));
+#endif
+		}
+		catch (Exception ex)
+		{
+#if DEBUG
+			System.Diagnostics.Debug.WriteLine($"[MauiProgram] Service setup error: {ex.Message}");
+#endif
+			// Continue anyway - database operations will handle the error
+		}
 
 		return app;
 	}

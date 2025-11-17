@@ -41,6 +41,16 @@ public class DatabaseService
 		}
 	}
 
+	private async Task<SQLiteAsyncConnection> GetConnectionAsync()
+	{
+		if (_connection is null)
+		{
+			// Auto-initialize if not already done
+			await InitializeAsync();
+		}
+		return _connection!;
+	}
+
 	private SQLiteAsyncConnection GetConnection()
 	{
 		if (_connection is null) throw new InvalidOperationException("Database not initialized. Call InitializeAsync() first.");
@@ -67,7 +77,11 @@ public class DatabaseService
 
 	public async Task<List<AcademicTerm>> GetAllTermsAsync()
 	{
-		try { return await GetConnection().Table<AcademicTerm>().OrderBy(t => t.StartDate).ToListAsync(); }
+		try 
+		{ 
+			var connection = await GetConnectionAsync();
+			return await connection.Table<AcademicTerm>().OrderBy(t => t.StartDate).ToListAsync(); 
+		}
 		catch (Exception ex) { Debug.WriteLine($"[DB][GetAllTerms] {ex}"); throw; }
 	}
 

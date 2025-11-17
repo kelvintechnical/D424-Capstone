@@ -31,7 +31,12 @@ public static class MauiProgram
 #endif
 
 		// Services (DI)
-		var dbPath = Path.Combine(FileSystem.AppDataDirectory, "student-progress.db3");
+		var appDataDir = FileSystem.AppDataDirectory;
+		if (!Directory.Exists(appDataDir))
+		{
+			Directory.CreateDirectory(appDataDir);
+		}
+		var dbPath = Path.Combine(appDataDir, "student-progress.db3");
 		builder.Services.AddSingleton(new DatabaseService(dbPath));
 		builder.Services.AddSingleton<NotificationService>();
 
@@ -45,22 +50,36 @@ public static class MauiProgram
 
         var app = builder.Build();
 
-		// Initialize
-		try
+		// Set ServiceHelper immediately so UI can access services
+		ServiceHelper.Services = app.Services;
+
+		// Initialize database asynchronously (don't block window creation)
+		_ = Task.Run(async () =>
 		{
-			var db = app.Services.GetRequiredService<DatabaseService>();
-			DatabaseService.Current = db;
-			db.InitializeAsync().GetAwaiter().GetResult();
-			ServiceHelper.Services = app.Services;
-		}
-		catch (Exception ex)
-		{
+			try
+			{
+				var db = app.Services.GetRequiredService<DatabaseService>();
+				DatabaseService.Current = db;
+				await db.InitializeAsync();
 #if DEBUG
-			System.Diagnostics.Debug.WriteLine($"[MauiProgram] Initialization error: {ex}");
-			System.Diagnostics.Debugger.Break();
+				System.Diagnostics.Debug.WriteLine("[MauiProgram] Database initialized successfully");
 #endif
-			// Log but don't crash - app can still start
-		}
+			}
+			catch (Exception ex)
+			{
+#if DEBUG
+				System.Diagnostics.Debug.WriteLine($"[MauiProgram] Initialization error: {ex}");
+				System.Diagnostics.Debug.WriteLine($"[MauiProgram] Exception Type: {ex.GetType().Name}");
+				System.Diagnostics.Debug.WriteLine($"[MauiProgram] Exception Message: {ex.Message}");
+				if (ex.InnerException != null)
+				{
+					System.Diagnostics.Debug.WriteLine($"[MauiProgram] Inner Exception: {ex.InnerException.Message}");
+				}
+				System.Diagnostics.Debug.WriteLine($"[MauiProgram] Stack Trace: {ex.StackTrace}");
+				// Don't break here - let window appear, error is logged
+#endif
+			}
+		});
 
 		return app;
 	}

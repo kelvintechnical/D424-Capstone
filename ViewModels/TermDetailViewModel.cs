@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using StudentProgressTracker.Helpers;
 using StudentProgressTracker.Models;
 using StudentProgressTracker.Services;
 
@@ -8,6 +9,9 @@ namespace StudentProgressTracker.ViewModels;
 public partial class TermDetailViewModel : ObservableObject
 {
 	private readonly DatabaseService _db;
+	private DateTime _previousValidStartDate = DateTime.Today;
+	private DateTime _previousValidEndDate = DateTime.Today;
+	private bool _isValidatingDate;
 
 	[ObservableProperty] private AcademicTerm? term;
 	[ObservableProperty] private string title = string.Empty;
@@ -15,6 +19,8 @@ public partial class TermDetailViewModel : ObservableObject
 	[ObservableProperty] private DateTime endDate = DateTime.Today;
 	[ObservableProperty] private bool isLoading;
 	[ObservableProperty] private bool isSaving;
+	[ObservableProperty] private string startDateError = string.Empty;
+	[ObservableProperty] private string endDateError = string.Empty;
 
 	public TermDetailViewModel(DatabaseService db)
 	{
@@ -30,8 +36,15 @@ public partial class TermDetailViewModel : ObservableObject
 			if (t is null) return;
 			Term = t;
 			Title = t.Title;
-			StartDate = ConvertUtcToLocal(t.StartDate);
-			EndDate = ConvertUtcToLocal(t.EndDate);
+			var localStartDate = ConvertUtcToLocal(t.StartDate);
+			var localEndDate = ConvertUtcToLocal(t.EndDate);
+			
+			// Store as previous valid dates
+			_previousValidStartDate = localStartDate;
+			_previousValidEndDate = localEndDate;
+			
+			StartDate = localStartDate;
+			EndDate = localEndDate;
 		}
 		finally
 		{
@@ -128,6 +141,78 @@ public partial class TermDetailViewModel : ObservableObject
 	private async Task GoBackAsync()
 	{
 		await Shell.Current.GoToAsync("..");
+	}
+
+	/// <summary>
+	/// Called when StartDate property changes. Validates the date and reverts if invalid.
+	/// </summary>
+	partial void OnStartDateChanged(DateTime value)
+	{
+		if (_isValidatingDate || IsLoading) return;
+
+		var validation = DateValidationHelper.ValidateDate(value);
+		
+		if (!validation.IsValid)
+		{
+			// Show error message
+			StartDateError = validation.ErrorMessage;
+			
+			// Revert to previous valid date
+			_isValidatingDate = true;
+			StartDate = _previousValidStartDate;
+			_isValidatingDate = false;
+			
+			// Display alert to user
+			if (Application.Current?.MainPage is not null)
+			{
+				_ = Application.Current.MainPage.DisplayAlert(
+					"Invalid Date",
+					validation.ErrorMessage,
+					"OK");
+			}
+		}
+		else
+		{
+			// Date is valid, clear error and update previous valid date
+			StartDateError = string.Empty;
+			_previousValidStartDate = value;
+		}
+	}
+
+	/// <summary>
+	/// Called when EndDate property changes. Validates the date and reverts if invalid.
+	/// </summary>
+	partial void OnEndDateChanged(DateTime value)
+	{
+		if (_isValidatingDate || IsLoading) return;
+
+		var validation = DateValidationHelper.ValidateDate(value);
+		
+		if (!validation.IsValid)
+		{
+			// Show error message
+			EndDateError = validation.ErrorMessage;
+			
+			// Revert to previous valid date
+			_isValidatingDate = true;
+			EndDate = _previousValidEndDate;
+			_isValidatingDate = false;
+			
+			// Display alert to user
+			if (Application.Current?.MainPage is not null)
+			{
+				_ = Application.Current.MainPage.DisplayAlert(
+					"Invalid Date",
+					validation.ErrorMessage,
+					"OK");
+			}
+		}
+		else
+		{
+			// Date is valid, clear error and update previous valid date
+			EndDateError = string.Empty;
+			_previousValidEndDate = value;
+		}
 	}
 }
 

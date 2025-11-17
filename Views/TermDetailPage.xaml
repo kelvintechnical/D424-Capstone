@@ -22,10 +22,22 @@
                         <VerticalStackLayout>
                             <Label Text="Start Date" />
                             <DatePicker Date="{Binding StartDate}" />
+                            <Label 
+                                Text="{Binding StartDateError}" 
+                                TextColor="Red" 
+                                FontSize="12"
+                                IsVisible="{Binding StartDateError, Converter={StaticResource IsStringNotEmptyConverter}}"
+                                Margin="0,4,0,0" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="1">
                             <Label Text="End Date" />
                             <DatePicker Date="{Binding EndDate}" />
+                            <Label 
+                                Text="{Binding EndDateError}" 
+                                TextColor="Red" 
+                                FontSize="12"
+                                IsVisible="{Binding EndDateError, Converter={StaticResource IsStringNotEmptyConverter}}"
+                                Margin="0,4,0,0" />
                         </VerticalStackLayout>
                     </Grid>
                 </VerticalStackLayout>

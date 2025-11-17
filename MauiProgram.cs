@@ -54,10 +54,14 @@ public static class MauiProgram
 		ServiceHelper.Services = app.Services;
 
 		// Initialize database asynchronously (don't block window creation)
+		// Use Task.Run to avoid blocking the UI thread
 		_ = Task.Run(async () =>
 		{
 			try
 			{
+				// Small delay to ensure UI is ready
+				await Task.Delay(500);
+				
 				var db = app.Services.GetRequiredService<DatabaseService>();
 				DatabaseService.Current = db;
 				await db.InitializeAsync();
@@ -79,7 +83,15 @@ public static class MauiProgram
 				// Don't break here - let window appear, error is logged
 #endif
 			}
-		});
+		}).ContinueWith(task =>
+		{
+			if (task.IsFaulted)
+			{
+#if DEBUG
+				System.Diagnostics.Debug.WriteLine($"[MauiProgram] Task faulted: {task.Exception?.GetBaseException()?.Message}");
+#endif
+			}
+		}, TaskContinuationOptions.OnlyOnFaulted);
 
 		return app;
 	}

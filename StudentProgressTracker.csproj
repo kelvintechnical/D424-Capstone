@@ -23,6 +23,13 @@
 		<!-- Platform-specific OS version requirements -->
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+
+		<!-- Android Build Settings -->
+		<AndroidEnableProguard Condition="'$(Configuration)' == 'Debug'">false</AndroidEnableProguard>
+		<AndroidEnableR8 Condition="'$(Configuration)' == 'Debug'">false</AndroidEnableR8>
+		<AndroidLinkResources Condition="'$(Configuration)' == 'Debug'">None</AndroidLinkResources>
+		<AndroidDexTool Condition="'$(Configuration)' == 'Debug'">d8</AndroidDexTool>
+		<ProguardConfigFiles Condition="Exists('Platforms\Android\proguard.cfg')">$(ProguardConfigFiles);Platforms\Android\proguard.cfg</ProguardConfigFiles>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -50,6 +57,33 @@
 		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
 		<PackageReference Include="Plugin.LocalNotification" Version="12.0.2" />
 	</ItemGroup>
+
+	<!-- Exclude conflicting AndroidX Collection.Ktx package -->
+	<Target Name="ExcludeConflictingAndroidXPackages" BeforeTargets="_ResolveLibraryProjectImports">
+		<ItemGroup>
+			<_AndroidLibraryImports Remove="@(_AndroidLibraryImports)" Condition="$([System.String]::Copy('%(Identity)').Contains('androidx.collection.collection-ktx.jar'))" />
+		</ItemGroup>
+	</Target>
+	
+	<!-- Remove conflicting ktx JAR file from disk and D8 inputs -->
+	<Target Name="RemoveConflictingKtxJar" AfterTargets="_ResolveLibraryProjectImports" BeforeTargets="_CreateDexInputs">
+		<ItemGroup>
+			<_KtxJars Include="C:\Users\kelvi\.nuget\packages\xamarin.androidx.collection.ktx\**\androidx.collection.collection-ktx.jar" />
+		</ItemGroup>
+		<Delete Files="@(_KtxJars)" ContinueOnError="true" />
+		<Message Text="Attempted to delete ktx JAR files: @(_KtxJars)" Importance="high" />
+		<ItemGroup>
+			<_D8InputJars Remove="@(_D8InputJars)" Condition="$([System.String]::Copy('%(FullPath)').Contains('collection-ktx.jar'))" />
+		</ItemGroup>
+	</Target>
+	
+	<!-- Final cleanup right before D8 compilation -->
+	<Target Name="FinalRemoveKtxJarFromD8" BeforeTargets="_CompileToDalvik">
+		<ItemGroup>
+			<_D8InputJars Remove="@(_D8InputJars)" Condition="$([System.String]::Copy('%(FullPath)').Contains('collection-ktx.jar'))" />
+		</ItemGroup>
+		<Message Text="Final D8 cleanup: Removed ktx JARs" Importance="high" />
+	</Target>
 
 </Project>
 

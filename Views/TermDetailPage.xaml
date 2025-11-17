@@ -5,35 +5,53 @@
              xmlns:viewmodels="clr-namespace:StudentProgressTracker.ViewModels"
              x:DataType="viewmodels:TermDetailViewModel"
              Title="Term Details">
-    <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="16">
-            <Label Text="Academic Term Details" Style="{StaticResource Headline}" />
+    <Shell.BackButtonBehavior>
+        <BackButtonBehavior IsEnabled="True" IsVisible="True" />
+    </Shell.BackButtonBehavior>
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView>
+            <VerticalStackLayout Padding="16" Spacing="16">
+                <Label Text="Academic Term Details" Style="{StaticResource Headline}" />
 
-            <VerticalStackLayout>
-                <Label Text="Term Title" />
-                <Entry Text="{Binding Title}" Placeholder="e.g., Spring 2025, Term 1" />
+                <VerticalStackLayout>
+                    <Label Text="Term Title" />
+                    <Entry Text="{Binding Title}" Placeholder="e.g., Spring 2025, Term 1" />
 
-                <Label Text="Dates" Margin="0,12,0,0" />
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                    <VerticalStackLayout>
-                        <Label Text="Start Date" />
-                        <DatePicker Date="{Binding StartDate}" />
-                    </VerticalStackLayout>
-                    <VerticalStackLayout Grid.Column="1">
-                        <Label Text="End Date" />
-                        <DatePicker Date="{Binding EndDate}" />
-                    </VerticalStackLayout>
+                    <Label Text="Dates" Margin="0,12,0,0" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout>
+                            <Label Text="Start Date" />
+                            <DatePicker Date="{Binding StartDate}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="End Date" />
+                            <DatePicker Date="{Binding EndDate}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+
+                <Grid ColumnDefinitions="*,Auto" VerticalOptions="End" Margin="0,16,0,0">
+                    <ActivityIndicator IsVisible="{Binding IsSaving}" IsRunning="{Binding IsSaving}" />
+                    <HorizontalStackLayout Grid.Column="1" Spacing="12">
+                        <Button Text="Delete" Command="{Binding DeleteCommand}" BackgroundColor="{StaticResource Gray400}" TextColor="{StaticResource White}" />
+                        <Button Text="Save Term" Command="{Binding SaveCommand}" />
+                    </HorizontalStackLayout>
                 </Grid>
             </VerticalStackLayout>
-
-            <Grid ColumnDefinitions="*,Auto" VerticalOptions="End" Margin="0,16,0,0">
-                <ActivityIndicator IsVisible="{Binding IsSaving}" IsRunning="{Binding IsSaving}" />
-                <HorizontalStackLayout Grid.Column="1" Spacing="12">
-                    <Button Text="Delete" Command="{Binding DeleteCommand}" BackgroundColor="{StaticResource Gray400}" TextColor="{StaticResource White}" />
-                    <Button Text="Save Term" Command="{Binding SaveCommand}" />
-                </HorizontalStackLayout>
-            </Grid>
-        </VerticalStackLayout>
-    </ScrollView>
+        </ScrollView>
+        
+        <!-- Back Button at Bottom -->
+        <Button Grid.Row="1"
+                Text="← Back" 
+                Command="{Binding GoBackCommand}"
+                BackgroundColor="{StaticResource Secondary}"
+                TextColor="{StaticResource Charcoal}"
+                FontSize="18"
+                FontAttributes="Bold"
+                CornerRadius="0"
+                HeightRequest="60"
+                HorizontalOptions="Fill"
+                Margin="0" />
+    </Grid>
 </ContentPage>
 

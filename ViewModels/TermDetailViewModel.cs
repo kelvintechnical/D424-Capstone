@@ -123,5 +123,11 @@ public partial class TermDetailViewModel : ObservableObject
 			}
 		}
 	}
+
+	[RelayCommand]
+	private async Task GoBackAsync()
+	{
+		await Shell.Current.GoToAsync("..");
+	}
 }
 

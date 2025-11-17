@@ -228,6 +228,12 @@ public partial class AssessmentViewModel : ObservableObject
             await Application.Current.Windows[0].Page.DisplayAlert("Error", $"Failed to delete assessment: {ex.Message}", "OK");
 		}
 	}
+
+	[RelayCommand]
+	private async Task GoBackAsync()
+	{
+		await Shell.Current.GoToAsync("..");
+	}
 }
 
 

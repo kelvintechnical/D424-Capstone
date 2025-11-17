@@ -178,6 +178,12 @@ public partial class CourseListViewModel : ObservableObject
 	{
 		SelectedCourse = course;
 	}
+
+	[RelayCommand]
+	private async Task GoBackAsync()
+	{
+		await Shell.Current.GoToAsync("..");
+	}
 }
 
 

@@ -5,7 +5,11 @@
              xmlns:viewmodels="clr-namespace:StudentProgressTracker.ViewModels"
              x:DataType="viewmodels:AssessmentViewModel"
              Title="Assessments">
-    <ScrollView>
+    <Shell.BackButtonBehavior>
+        <BackButtonBehavior IsEnabled="True" IsVisible="True" />
+    </Shell.BackButtonBehavior>
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="16">
             <Label Text="Assessments" Style="{StaticResource Headline}" />
 
@@ -60,6 +64,20 @@
             <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
         </VerticalStackLayout>
     </ScrollView>
+    
+    <!-- Back Button at Bottom -->
+    <Button Grid.Row="1"
+            Text="← Back" 
+            Command="{Binding GoBackCommand}"
+            BackgroundColor="{StaticResource Secondary}"
+            TextColor="{StaticResource Charcoal}"
+            FontSize="18"
+            FontAttributes="Bold"
+            CornerRadius="0"
+            HeightRequest="60"
+            HorizontalOptions="Fill"
+            Margin="0" />
+    </Grid>
 </ContentPage>
 
 

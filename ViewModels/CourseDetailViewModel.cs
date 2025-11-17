@@ -196,6 +196,12 @@ public partial class CourseDetailViewModel : ObservableObject
 
 		await Shell.Current.GoToAsync($"{nameof(Views.AssessmentsPage)}?courseId={Course.Id}");
 	}
+
+	[RelayCommand]
+	private async Task GoBackAsync()
+	{
+		await Shell.Current.GoToAsync("..");
+	}
 }
 
 

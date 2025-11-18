@@ -4,6 +4,8 @@
 - **Windows (net8.0-windows10.0.19041.0)**: ✅ Builds successfully (warnings only)
 - **Android (net8.0-android)**: ⚠️ Dependency conflict error (AndroidX collection duplicate class)
 - **Clean/Rebuild**: ✅ Works without errors on Windows
+- **MAUI Version**: Updated from 9.0.0 to 8.0.14 (to match CommunityToolkit.Maui requirements)
+- **AppShell.xaml**: Fixed invalid ForegroundColor property (removed)
 
 ## 📋 PROJECT CONFIGURATION
 - **Target Frameworks**: `net8.0-android;net8.0-windows10.0.19041.0` (iOS/macCatalyst removed)

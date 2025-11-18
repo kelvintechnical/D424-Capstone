@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!-- Windows and Android targets for cross-platform app -->
-		<TargetFrameworks>net9.0-android;net9.0-windows10.0.19041.0</TargetFrameworks>
+		<TargetFrameworks>net8.0-android;net8.0-windows10.0.19041.0</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<RootNamespace>StudentProgressTracker</RootNamespace>
 		<UseMaui>true</UseMaui>
+		<WindowsPackageType>None</WindowsPackageType>
 		<SingleProject>true</SingleProject>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -20,7 +20,8 @@
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
-		<!-- Android OS version requirement -->
+		<!-- Platform-specific OS version requirements -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
 
 		<!-- Android Build Settings -->
@@ -29,12 +30,6 @@
 		<AndroidLinkResources Condition="'$(Configuration)' == 'Debug'">None</AndroidLinkResources>
 		<AndroidDexTool Condition="'$(Configuration)' == 'Debug'">d8</AndroidDexTool>
 		<ProguardConfigFiles Condition="Exists('Platforms\Android\proguard.cfg')">$(ProguardConfigFiles);Platforms\Android\proguard.cfg</ProguardConfigFiles>
-		
-		<!-- Windows Package Type -->
-		<WindowsPackageType Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">None</WindowsPackageType>
-		
-		<!-- Suppress NETSDK1202 warning - net8.0-android is still supported for MAUI development -->
-		<NoWarn>$(NoWarn);NETSDK1202</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -55,18 +50,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
-		<PackageReference Include="CommunityToolkit.Maui" Version="9.1.1" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="8.0.0" />
 		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
 		<PackageReference Include="Plugin.LocalNotification" Version="12.0.2" />
-
-		<!-- Explicitly exclude the KTX package to prevent build conflicts -->
-		<!-- Use version 1.5.0.3 to match dependency requirements, but exclude all assets -->
-		<PackageReference Include="Xamarin.AndroidX.Collection.Ktx" Version="1.5.0.3" ExcludeAssets="all" />
 	</ItemGroup>
-
 
 	<!-- Exclude conflicting AndroidX Collection.Ktx package early in the build -->
 	<Target Name="ExcludeConflictingAndroidXPackages" BeforeTargets="_ResolveLibraryProjectImports">
@@ -90,36 +80,26 @@
 			<!-- Match on the resolved path pattern too -->
 			<_KtxToRemove Include="@(_AndroidLibraryImports)" Condition="$([System.String]::Copy('%(Identity)').Contains('androidx.collection.collection-ktx.jar'))" />
 		</ItemGroup>
-
-		<!-- Remove all collected KTX entries from all relevant item groups -->
+		
+		<!-- Remove all collected KTX entries -->
 		<ItemGroup>
 			<_AndroidLibraryImports Remove="@(_KtxToRemove)" />
-			<!-- Also remove from JavaLibraries which is what CheckDuplicateJavaLibraries actually uses -->
-			<JavaLibraries Remove="@(JavaLibraries)" Condition="$([System.String]::Copy('%(Identity)').Contains('collection-ktx'))" />
-			<JavaLibraries Remove="@(JavaLibraries)" Condition="$([System.String]::Copy('%(Identity)').Contains('Xamarin.AndroidX.Collection.Ktx'))" />
-			<JavaLibraries Remove="@(JavaLibraries)" Condition="$([System.String]::Copy('%(FullPath)').Contains('collection-ktx'))" />
-			<JavaLibraries Remove="@(JavaLibraries)" Condition="$([System.String]::Copy('%(Identity)').Contains('xamarin.androidx.collection.ktx'))" />
-			<JavaLibraries Remove="@(JavaLibraries)" Condition="$([System.String]::Copy('%(Identity)').Contains('androidx.collection.collection-ktx.jar'))" />
 		</ItemGroup>
-
-		<Message Text="Removed @(_KtxToRemove->Count()) KTX references from _AndroidLibraryImports" Importance="high" />
+		
+		<Message Text="Removed @(_KtxToRemove->Count()) KTX references before duplicate check" Importance="high" />
 		<Message Text="KTX entries removed: @(_KtxToRemove->'%(Identity)')" Importance="normal" Condition="'@(_KtxToRemove)' != ''" />
 	</Target>
 	
 	<!-- Also filter out non-existent files that might cause FileNotFoundException -->
 	<Target Name="FilterNonExistentKtxFiles" BeforeTargets="CheckDuplicateJavaLibraries" AfterTargets="RemoveKtxBeforeDuplicateCheck">
 		<ItemGroup>
-			<_NonExistentKtx Include="@(_AndroidLibraryImports)"
-				Condition="!Exists('%(Identity)') And ($([System.String]::Copy('%(Identity)').Contains('collection-ktx')) Or $([System.String]::Copy('%(Identity)').Contains('ktx')))" />
-			<_NonExistentKtxJava Include="@(JavaLibraries)"
+			<_NonExistentKtx Include="@(_AndroidLibraryImports)" 
 				Condition="!Exists('%(Identity)') And ($([System.String]::Copy('%(Identity)').Contains('collection-ktx')) Or $([System.String]::Copy('%(Identity)').Contains('ktx')))" />
 		</ItemGroup>
 		<ItemGroup>
 			<_AndroidLibraryImports Remove="@(_NonExistentKtx)" />
-			<JavaLibraries Remove="@(_NonExistentKtxJava)" />
 		</ItemGroup>
-		<Message Text="Filtered out @(_NonExistentKtx->Count()) non-existent KTX files from _AndroidLibraryImports" Importance="high" Condition="'@(_NonExistentKtx)' != ''" />
-		<Message Text="Filtered out @(_NonExistentKtxJava->Count()) non-existent KTX files from JavaLibraries" Importance="high" Condition="'@(_NonExistentKtxJava)' != ''" />
+		<Message Text="Filtered out @(_NonExistentKtx->Count()) non-existent KTX files" Importance="high" Condition="'@(_NonExistentKtx)' != ''" />
 	</Target>
 	
 	<!-- Create dummy KTX JAR file if it's referenced but missing (prevents FileNotFoundException) -->
@@ -163,30 +143,6 @@
 			<_D8InputClasses Remove="@(_D8InputClasses)" Condition="$([System.String]::Copy('%(FullPath)').Contains('collection-ktx'))" />
 		</ItemGroup>
 		<Message Text="Final D8 cleanup: Removed ktx JARs and classes" Importance="high" />
-	</Target>
-	
-	<!-- Handle duplicate lifecycle ViewModel classes - exclude lifecycle-viewmodel-android AAR -->
-	<Target Name="FixLifecycleViewModelConflicts" BeforeTargets="CheckDuplicateJavaLibraries">
-		<ItemGroup>
-			<!-- Remove lifecycle-viewmodel-android AAR references to prevent duplicate class errors -->
-			<_AndroidLibraryImports Remove="@(_AndroidLibraryImports)" 
-				Condition="$([System.String]::Copy('%(Identity)').Contains('lifecycle-viewmodel-android.aar'))" />
-			<_AndroidAarImports Remove="@(_AndroidAarImports)" 
-				Condition="$([System.String]::Copy('%(Identity)').Contains('lifecycle-viewmodel-android'))" />
-			<JavaLibraries Remove="@(JavaLibraries)" 
-				Condition="$([System.String]::Copy('%(Identity)').Contains('lifecycle-viewmodel-android'))" />
-		</ItemGroup>
-		<Message Text="Removed lifecycle-viewmodel-android AAR references to fix duplicate class errors" Importance="high" />
-	</Target>
-	
-	<!-- Also remove from D8 inputs if it gets that far -->
-	<Target Name="RemoveLifecycleViewModelFromD8" BeforeTargets="_CompileToDalvik" AfterTargets="_CreateDexInputs">
-		<ItemGroup>
-			<_D8InputJars Remove="@(_D8InputJars)" 
-				Condition="$([System.String]::Copy('%(FullPath)').Contains('lifecycle-viewmodel-android'))" />
-			<_D8InputClasses Remove="@(_D8InputClasses)" 
-				Condition="$([System.String]::Copy('%(FullPath)').Contains('lifecycle-viewmodel-android'))" />
-		</ItemGroup>
 	</Target>
 
 </Project>

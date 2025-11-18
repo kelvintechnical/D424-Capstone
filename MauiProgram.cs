@@ -14,9 +14,6 @@ public static class MauiProgram
 	public static MauiApp CreateMauiApp()
 	{
 		var builder = MauiApp.CreateBuilder();
-		
-		// Suppress CA1416 warnings - these methods are supported on our target platforms
-		#pragma warning disable CA1416
 		builder
 			.UseMauiApp<App>()
 			.UseMauiCommunityToolkit()
@@ -28,7 +25,6 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
-		#pragma warning restore CA1416
 
 #if DEBUG
 		builder.Logging.AddDebug();
@@ -52,13 +48,10 @@ public static class MauiProgram
 		builder.Services.AddSingleton<AssessmentViewModel>();
         builder.Services.AddSingleton<IAlertService, AlertService>();
 
-		// Suppress CA1416 warnings - Build() and Services are supported on our target platforms
-		#pragma warning disable CA1416
         var app = builder.Build();
 
 		// Set ServiceHelper immediately so UI can access services
 		ServiceHelper.Services = app.Services;
-		#pragma warning restore CA1416
 
 		// Initialize database - ensure it's ready before UI loads
 		// Use a background task that completes quickly

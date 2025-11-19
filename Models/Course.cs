@@ -1,4 +1,5 @@
 using SQLite;
+using System.ComponentModel.DataAnnotations;
 
 namespace StudentProgressTracker.Models;
 
@@ -32,9 +33,16 @@ public class Course
 
 public enum CourseStatus
 {
+	[Display(Name = "In Progress")]
 	InProgress,
+
+	[Display(Name = "Completed")]
 	Completed,
+
+	[Display(Name = "Dropped")]
 	Dropped,
+
+	[Display(Name = "Plan To Take")]
 	PlanToTake
 }
 

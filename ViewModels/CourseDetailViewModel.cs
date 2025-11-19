@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 using StudentProgressTracker.Models;
 using StudentProgressTracker.Services;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 
 namespace StudentProgressTracker.ViewModels;
 
@@ -14,8 +16,8 @@ public partial class CourseDetailViewModel : ObservableObject
 	[ObservableProperty] private Course? course;
 	[ObservableProperty] private ObservableCollection<Assessment> assessments = new();
 	[ObservableProperty] private Instructor? instructor;
-	[ObservableProperty] private List<string> courseStatusOptions = Enum.GetNames(typeof(CourseStatus)).ToList();
-	[ObservableProperty] private string selectedStatus = CourseStatus.InProgress.ToString();
+	[ObservableProperty] private List<string> courseStatusOptions = GetEnumDisplayNames<CourseStatus>();
+	[ObservableProperty] private string selectedStatus = GetEnumDisplayName(CourseStatus.InProgress);
 	[ObservableProperty] private string? notes;
 	[ObservableProperty] private DateTime startDate = DateTime.Today;
 	[ObservableProperty] private DateTime endDate = DateTime.Today;
@@ -56,7 +58,15 @@ public partial class CourseDetailViewModel : ObservableObject
 	public void MapCourseToProperties()
 	{
 		if (Course is null) return;
-		SelectedStatus = Course.Status;
+		// Convert enum value to display name
+		if (Enum.TryParse<CourseStatus>(Course.Status, out var statusEnum))
+		{
+			SelectedStatus = GetEnumDisplayName(statusEnum);
+		}
+		else
+		{
+			SelectedStatus = Course.Status;
+		}
 		Notes = Course.Notes;
 		StartDate = ConvertUtcToLocal(Course.StartDate);
 		EndDate = ConvertUtcToLocal(Course.EndDate);
@@ -65,7 +75,8 @@ public partial class CourseDetailViewModel : ObservableObject
 	public void MapPropertiesToCourse()
 	{
 		if (Course is null) return;
-		Course.Status = SelectedStatus;
+		// Convert display name back to enum value
+		Course.Status = GetEnumValueFromDisplayName<CourseStatus>(SelectedStatus).ToString();
 		Course.Notes = Notes;
 		Course.StartDate = ConvertLocalToUtc(StartDate);
 		Course.EndDate = ConvertLocalToUtc(EndDate);
@@ -201,6 +212,35 @@ public partial class CourseDetailViewModel : ObservableObject
 	private async Task GoBackAsync()
 	{
 		await Shell.Current.GoToAsync("..");
+	}
+
+	// Helper methods to read Display attribute from enum values
+	private static List<string> GetEnumDisplayNames<TEnum>() where TEnum : Enum
+	{
+		return Enum.GetValues(typeof(TEnum))
+			.Cast<TEnum>()
+			.Select(e => GetEnumDisplayName(e))
+			.ToList();
+	}
+
+	private static string GetEnumDisplayName<TEnum>(TEnum enumValue) where TEnum : Enum
+	{
+		var member = typeof(TEnum).GetMember(enumValue.ToString()).FirstOrDefault();
+		var displayAttribute = member?.GetCustomAttribute<DisplayAttribute>();
+		return displayAttribute?.Name ?? enumValue.ToString();
+	}
+
+	private static TEnum GetEnumValueFromDisplayName<TEnum>(string displayName) where TEnum : struct, Enum
+	{
+		foreach (var enumValue in Enum.GetValues<TEnum>())
+		{
+			if (GetEnumDisplayName(enumValue) == displayName)
+			{
+				return enumValue;
+			}
+		}
+		// Fallback: try to parse as enum name
+		return Enum.TryParse<TEnum>(displayName, out var result) ? result : default;
 	}
 }
 

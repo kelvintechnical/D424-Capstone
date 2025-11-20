@@ -21,6 +21,8 @@ public partial class CourseDetailViewModel : ObservableObject
 	[ObservableProperty] private string? notes;
 	[ObservableProperty] private DateTime startDate = DateTime.Today;
 	[ObservableProperty] private DateTime endDate = DateTime.Today;
+	[ObservableProperty] private TimeSpan startTime = TimeSpan.FromHours(9);
+	[ObservableProperty] private TimeSpan endTime = TimeSpan.FromHours(9);
 	[ObservableProperty] private bool isLoading;
 	[ObservableProperty] private bool isSaving;
 
@@ -68,8 +70,12 @@ public partial class CourseDetailViewModel : ObservableObject
 			SelectedStatus = Course.Status;
 		}
 		Notes = Course.Notes;
-		StartDate = ConvertUtcToLocal(Course.StartDate);
-		EndDate = ConvertUtcToLocal(Course.EndDate);
+		var localStart = ConvertUtcToLocal(Course.StartDate);
+		var localEnd = ConvertUtcToLocal(Course.EndDate);
+		StartDate = localStart.Date;
+		StartTime = localStart.TimeOfDay;
+		EndDate = localEnd.Date;
+		EndTime = localEnd.TimeOfDay;
 	}
 
 	public void MapPropertiesToCourse()
@@ -78,12 +84,16 @@ public partial class CourseDetailViewModel : ObservableObject
 		// Convert display name back to enum value
 		Course.Status = GetEnumValueFromDisplayName<CourseStatus>(SelectedStatus).ToString();
 		Course.Notes = Notes;
-		Course.StartDate = ConvertLocalToUtc(StartDate);
-		Course.EndDate = ConvertLocalToUtc(EndDate);
+		var localStart = CombineDateAndTime(StartDate, StartTime);
+		var localEnd = CombineDateAndTime(EndDate, EndTime);
+		Course.StartDate = ConvertLocalToUtc(localStart);
+		Course.EndDate = ConvertLocalToUtc(localEnd);
 	}
 
-	public DateTime ConvertUtcToLocal(DateTime utcDate) => utcDate.ToLocalTime().Date;
-	public DateTime ConvertLocalToUtc(DateTime localDate) => DateTime.SpecifyKind(localDate, DateTimeKind.Local).ToUniversalTime();
+	public DateTime ConvertUtcToLocal(DateTime utcDate) => utcDate.ToLocalTime();
+	public DateTime ConvertLocalToUtc(DateTime localDateTime) => DateTime.SpecifyKind(localDateTime, DateTimeKind.Local).ToUniversalTime();
+	private static DateTime CombineDateAndTime(DateTime date, TimeSpan time) =>
+		DateTime.SpecifyKind(date.Date + time, DateTimeKind.Local);
 
 	public async Task SaveCourseAsync()
 	{

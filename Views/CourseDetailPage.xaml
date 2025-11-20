@@ -21,15 +21,17 @@
                 <Label Text="Status" />
                 <Picker ItemsSource="{Binding CourseStatusOptions}" SelectedItem="{Binding SelectedStatus}" />
 
-                <Label Text="Dates" />
+                <Label Text="Dates & Times" />
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                    <VerticalStackLayout>
+                    <VerticalStackLayout Spacing="4">
                         <Label Text="Start" />
                         <DatePicker Date="{Binding StartDate}" />
+                        <TimePicker Time="{Binding StartTime}" />
                     </VerticalStackLayout>
-                    <VerticalStackLayout Grid.Column="1">
+                    <VerticalStackLayout Grid.Column="1" Spacing="4">
                         <Label Text="End" />
                         <DatePicker Date="{Binding EndDate}" />
+                        <TimePicker Time="{Binding EndTime}" />
                     </VerticalStackLayout>
                 </Grid>
             </VerticalStackLayout>

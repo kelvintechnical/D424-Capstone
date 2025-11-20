@@ -8,7 +8,7 @@
     <Shell.BackButtonBehavior>
         <BackButtonBehavior IsEnabled="True" IsVisible="True" />
     </Shell.BackButtonBehavior>
-    <Grid RowDefinitions="*,Auto">
+    <Grid RowDefinitions="*,Auto">     
         <ScrollView>
             <VerticalStackLayout Padding="16" Spacing="16">
                 <Label Text="Academic Term Details" Style="{StaticResource Headline}" />

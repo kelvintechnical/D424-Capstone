@@ -97,8 +97,15 @@ public class NotificationService
 			NotificationId = id,
 			Title = title,
 			Description = body,
-			Schedule = new NotificationRequestSchedule { NotifyTime = localTime }
+			Schedule = new NotificationRequestSchedule { NotifyTime = localTime },
+			CategoryType = NotificationCategoryType.Reminder,
+#if ANDROID
+			Android = { ChannelId = "general" }
+#endif
 		};
+#if DEBUG
+		System.Diagnostics.Debug.WriteLine($"[NotificationService] Scheduling notification {id}: {title} at {localTime}");
+#endif
 		await LocalNotificationCenter.Current.Show(request);
 	}
 
@@ -112,8 +119,15 @@ public class NotificationService
 			Schedule = new NotificationRequestSchedule
 			{
 				NotifyTime = DateTime.Now.AddSeconds(1) // Trigger immediately (1 second delay)
-			}
+			},
+			CategoryType = NotificationCategoryType.Reminder,
+#if ANDROID
+			Android = { ChannelId = "general" }
+#endif
 		};
+#if DEBUG
+		System.Diagnostics.Debug.WriteLine($"[NotificationService] Sending immediate notification {id}: {title} - {body}");
+#endif
 		await LocalNotificationCenter.Current.Show(request);
 	}
 #endif

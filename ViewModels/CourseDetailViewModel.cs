@@ -110,11 +110,10 @@ public partial class CourseDetailViewModel : ObservableObject
 			Course.InstructorId = Instructor.Id;
 			await _db.SaveCourseAsync(Course);
 
-			await _notifications.ScheduleCourseNotificationsAsync(
+			// Send immediate notifications instead of scheduling for future dates
+			await _notifications.SendImmediateCourseNotificationsAsync(
 				Course.Id,
 				Course.Title,
-				Course.StartDate,
-				Course.EndDate,
 				Course.NotificationsEnabled);
 		}
 		finally

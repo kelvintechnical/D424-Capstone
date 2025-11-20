@@ -9,6 +9,7 @@ namespace StudentProgressTracker.ViewModels;
 public partial class TermsViewModel : ObservableObject
 {
 	private readonly DatabaseService _db;
+	private readonly NotificationService _notifications;
 
 	[ObservableProperty]
 	private ObservableCollection<AcademicTerm> terms = new();
@@ -22,9 +23,10 @@ public partial class TermsViewModel : ObservableObject
 	[ObservableProperty]
 	private bool isLoading;
 
-	public TermsViewModel(DatabaseService db)
+	public TermsViewModel(DatabaseService db, NotificationService notifications)
 	{
 		_db = db;
+		_notifications = notifications;
 	}
 
 	public async Task LoadTermsAsync()
@@ -142,6 +144,20 @@ public partial class TermsViewModel : ObservableObject
 		catch (Exception ex)
 		{
 			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to delete term: {ex.Message}", "OK");
+		}
+	}
+
+	[RelayCommand]
+	private async Task TestNotificationAsync()
+	{
+		try
+		{
+			await _notifications.SendTestNotificationAsync();
+			await Application.Current.MainPage.DisplayAlert("Test Notification", "Test notification sent! Check your notification shade.", "OK");
+		}
+		catch (Exception ex)
+		{
+			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to send test notification: {ex.Message}", "OK");
 		}
 	}
 }

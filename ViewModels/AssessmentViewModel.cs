@@ -70,8 +70,9 @@ public partial class AssessmentViewModel : ObservableObject
 			throw new InvalidOperationException("Cannot add more than 2 assessments for a course.");
 
 		await _db.SaveAssessmentAsync(assessment);
-		await _notifications.ScheduleAssessmentNotificationsAsync(
-			assessment.Id, assessment.Name, assessment.StartDate, assessment.DueDate, assessment.NotificationsEnabled);
+		// Send immediate notifications instead of scheduling for future dates
+		await _notifications.SendImmediateAssessmentNotificationsAsync(
+			assessment.Id, assessment.Name, assessment.NotificationsEnabled);
 
 	 await LoadAssessmentsAsync(assessment.CourseId);
 	}

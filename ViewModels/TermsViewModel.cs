@@ -147,19 +147,6 @@ public partial class TermsViewModel : ObservableObject
 		}
 	}
 
-	[RelayCommand]
-	private async Task TestNotificationAsync()
-	{
-		try
-		{
-			await _notifications.SendTestNotificationAsync();
-			await Application.Current.MainPage.DisplayAlert("Test Notification", "Test notification sent! Check your notification shade.", "OK");
-		}
-		catch (Exception ex)
-		{
-			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to send test notification: {ex.Message}", "OK");
-		}
-	}
 }
 
 

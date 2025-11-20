@@ -1,6 +1,7 @@
 using Android.App;
 using Android.Runtime;
-using Android.OS;
+using Plugin.LocalNotification;
+using Plugin.LocalNotification.AndroidOption;
 
 namespace StudentProgressTracker
 {
@@ -15,33 +16,22 @@ namespace StudentProgressTracker
 		public override void OnCreate()
 		{
 			base.OnCreate();
-			CreateNotificationChannel();
-		}
 
-		private void CreateNotificationChannel()
-		{
-			// Create notification channel for Android 8.0+ (API 26+)
-			if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
+			// Let the plugin create and manage the notification channel
+			LocalNotificationCenter.CreateNotificationChannel(new NotificationChannelRequest
 			{
-				var channelId = "general";
-				var channelName = "General Notifications";
-				var channelDescription = "Notifications for courses and assessments";
-				var importance = NotificationImportance.High;
+				Id = "general",
+				Name = "General Notifications",
+				Description = "Notifications for courses and assessments",
+				Importance = NotificationImportance.High
+			});
 
-				var channel = new NotificationChannel(channelId, channelName, importance)
-				{
-					Description = channelDescription
-				};
-				channel.EnableVibration(true);
-				channel.EnableLights(true);
-
-				var notificationManager = (NotificationManager?)GetSystemService(NotificationService);
-				notificationManager?.CreateNotificationChannel(channel);
+			// CRITICAL: Initialize the plugin to register receivers
+			LocalNotificationCenter.Current.Initialize();
 
 #if DEBUG
-				System.Diagnostics.Debug.WriteLine("[MainApplication] Notification channel created");
+			System.Diagnostics.Debug.WriteLine("[MainApplication] LocalNotificationCenter initialized and channel created");
 #endif
-			}
 		}
 
 		protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();

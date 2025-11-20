@@ -1,5 +1,6 @@
 #if ANDROID || IOS
 using Plugin.LocalNotification;
+using Plugin.LocalNotification.AndroidOption;
 #endif
 
 namespace StudentProgressTracker.Services;
@@ -71,17 +72,6 @@ public class NotificationService
 #endif
 	}
 
-	public async Task SendTestNotificationAsync()
-	{
-#if ANDROID || IOS
-		var testId = 999999; // Use a unique ID for test notifications
-		LocalNotificationCenter.Current.Cancel(testId);
-		await ScheduleImmediateAsync(testId, "Test Notification", $"This is a test notification sent at {DateTime.Now:HH:mm:ss}");
-#else
-		await Task.CompletedTask;
-#endif
-	}
-
 #if ANDROID || IOS
 	private static int GetNotificationId(int entityId, string suffix) => (entityId.ToString() + "_" + suffix).GetHashCode();
 	private static DateTime ToNineAmLocal(DateTime utc)
@@ -97,16 +87,23 @@ public class NotificationService
 			NotificationId = id,
 			Title = title,
 			Description = body,
-			Schedule = new NotificationRequestSchedule { NotifyTime = localTime },
-			CategoryType = NotificationCategoryType.Reminder,
-#if ANDROID
-			Android = { ChannelId = "general" }
-#endif
+			Android = new AndroidOptions
+			{
+				ChannelId = "general"
+			},
+			Schedule = new NotificationRequestSchedule
+			{
+				NotifyTime = localTime.ToUniversalTime(),
+				NotifyRepeatInterval = null
+			}
 		};
 #if DEBUG
-		System.Diagnostics.Debug.WriteLine($"[NotificationService] Scheduling notification {id}: {title} at {localTime}");
+		System.Diagnostics.Debug.WriteLine($"[NotificationService] Scheduling notification {id}: {title} at {localTime} (UTC: {localTime.ToUniversalTime()})");
 #endif
-		await LocalNotificationCenter.Current.Show(request);
+		// Cancel previous if re-scheduling
+		await LocalNotificationCenter.Current.Cancel(id);
+		// MUST use Schedule(), not Show()
+		await LocalNotificationCenter.Current.Schedule(request);
 	}
 
 	private static async Task ScheduleImmediateAsync(int id, string title, string body)
@@ -116,18 +113,17 @@ public class NotificationService
 			NotificationId = id,
 			Title = title,
 			Description = body,
-			Schedule = new NotificationRequestSchedule
+			Android = new AndroidOptions
 			{
-				NotifyTime = DateTime.Now.AddSeconds(1) // Trigger immediately (1 second delay)
-			},
-			CategoryType = NotificationCategoryType.Reminder,
-#if ANDROID
-			Android = { ChannelId = "general" }
-#endif
+				ChannelId = "general"
+			}
 		};
 #if DEBUG
 		System.Diagnostics.Debug.WriteLine($"[NotificationService] Sending immediate notification {id}: {title} - {body}");
 #endif
+		// Cancel previous
+		await LocalNotificationCenter.Current.Cancel(id);
+		// Use Show() for immediate notifications (no schedule)
 		await LocalNotificationCenter.Current.Show(request);
 	}
 #endif

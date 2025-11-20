@@ -23,7 +23,8 @@ public partial class TermsPage : ContentPage
 					System.Diagnostics.Debug.WriteLine("[TermsPage] ServiceHelper.Services is null");
 					// Create a minimal ViewModel instance as fallback
 					var db = new Services.DatabaseService(Path.Combine(FileSystem.AppDataDirectory, "student-progress.db3"));
-					BindingContext = new TermsViewModel(db);
+					var notifications = new Services.NotificationService();
+					BindingContext = new TermsViewModel(db, notifications);
 				}
 			}
 			catch (Exception ex)
@@ -34,7 +35,8 @@ public partial class TermsPage : ContentPage
 				try
 				{
 					var db = new Services.DatabaseService(Path.Combine(FileSystem.AppDataDirectory, "student-progress.db3"));
-					BindingContext = new TermsViewModel(db);
+					var notifications = new Services.NotificationService();
+					BindingContext = new TermsViewModel(db, notifications);
 				}
 				catch (Exception ex2)
 				{

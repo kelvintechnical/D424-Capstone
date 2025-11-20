@@ -12,5 +12,14 @@
 	<application android:label="Student Progress Tracker"
 				 android:usesCleartextTraffic="false">
 		<!-- MAUI injects activities/services automatically -->
+
+		<!-- Boot receiver required for scheduled notifications -->
+		<receiver
+			android:name="com.plugin.localnotification.BootReceiver"
+			android:exported="false">
+			<intent-filter>
+				<action android:name="android.intent.action.BOOT_COMPLETED" />
+			</intent-filter>
+		</receiver>
 	</application>
 </manifest>

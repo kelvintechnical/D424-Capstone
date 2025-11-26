@@ -188,7 +188,6 @@ public class NotificationService
 		// Use Show() for immediate notifications (no schedule)
 		await LocalNotificationCenter.Current.Show(request);
 	}
-#endif
 	private static DateTime ToLocal(DateTime dateTime)
 	{
 		return dateTime.Kind switch

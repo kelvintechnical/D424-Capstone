@@ -21,7 +21,7 @@
                 <Label Text="Status" />
                 <Picker ItemsSource="{Binding CourseStatusOptions}" SelectedItem="{Binding SelectedStatus}" />
 
-                <Label Text="Dates & Times" />
+                <Label Text="Dates &amp; Times" />
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                     <VerticalStackLayout Spacing="4">
                         <Label Text="Start" />

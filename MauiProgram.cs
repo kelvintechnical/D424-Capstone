@@ -25,9 +25,6 @@ public static class MauiProgram
 		builder
 			.UseMauiApp<App>()
 			.UseMauiCommunityToolkit()
-#if ANDROID || IOS
-			.UseLocalNotification()
-#endif
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -115,30 +112,21 @@ public static class MauiProgram
 #if ANDROID || IOS
 	private static void ConfigureLocalNotifications(MauiAppBuilder builder)
 	{
-#if ANDROID
-		builder.ConfigureLifecycleEvents(events =>
+		builder.UseLocalNotification(config =>
 		{
-			events.AddAndroid(android =>
+#if ANDROID
+			config.AddAndroid(android =>
 			{
-				android.OnApplicationCreate(_ =>
+				android.AddChannel(new NotificationChannelRequest
 				{
-					LocalNotificationCenter.CreateNotificationChannel(new NotificationChannelRequest
-					{
-						Id = "general",
-						Name = "General Notifications",
-						Description = "Course and assessment reminders",
-						Importance = NotificationImportance.High
-					});
-
-					LocalNotificationCenter.Current.Initialize();
-
-#if DEBUG
-					System.Diagnostics.Debug.WriteLine("[MauiProgram] LocalNotificationCenter initialized");
-#endif
+					Id = NotificationService.NotificationChannelId,
+					Name = "General Notifications",
+					Description = "Course and assessment reminders",
+					Importance = AndroidImportance.High
 				});
 			});
-		});
 #endif
+		});
 
 		LocalNotificationCenter.Current.NotificationActionTapped += OnNotificationActionTapped;
 	}
@@ -148,7 +136,8 @@ public static class MauiProgram
 	private static void OnNotificationActionTapped(NotificationActionEventArgs e)
 	{
 #if DEBUG
-		System.Diagnostics.Debug.WriteLine($"[MauiProgram] Notification tapped: {e.NotificationId}");
+		var tappedId = e.Request?.NotificationId ?? -1;
+		System.Diagnostics.Debug.WriteLine($"[MauiProgram] Notification tapped: {tappedId}, ActionId: {e.ActionId}, Dismissed: {e.IsDismissed}");
 #endif
 	}
 #endif

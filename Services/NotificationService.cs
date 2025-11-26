@@ -8,11 +8,18 @@ namespace StudentProgressTracker.Services;
 public class NotificationService
 {
 #if ANDROID || IOS
-	private const string NotificationChannelId = "general";
+	internal const string NotificationChannelId = "general";
+	private const int TestNotificationId = 9_999_999;
+	private static readonly NotificationPermission PermissionRequest = new();
 #if ANDROID
 	private const string NotificationIconName = "notification_icon";
+	private static AndroidIcon CreateSmallIcon() => new(NotificationIconName);
+
+	static NotificationService()
+	{
+		PermissionRequest.Android.RequestPermissionToScheduleExactAlarm = true;
+	}
 #endif
-	private const int TestNotificationId = 9_999_999;
 #endif
 
 	public async Task ScheduleCourseNotificationsAsync(int courseId, string courseTitle, DateTime startUtc, DateTime endUtc, bool enabled)
@@ -83,10 +90,10 @@ public class NotificationService
 	public async Task<bool> SendTestNotificationAsync(string? title = null, string? message = null)
 	{
 #if ANDROID || IOS
-		var notificationsEnabled = LocalNotificationCenter.Current.AreNotificationsEnabled();
+		var notificationsEnabled = await LocalNotificationCenter.Current.AreNotificationsEnabled();
 		if (!notificationsEnabled)
 		{
-			notificationsEnabled = LocalNotificationCenter.Current.RequestNotificationPermission();
+			notificationsEnabled = await LocalNotificationCenter.Current.RequestNotificationPermission(PermissionRequest);
 		}
 
 		if (!notificationsEnabled)
@@ -108,7 +115,7 @@ public class NotificationService
 				LaunchAppWhenTapped = true
 #if ANDROID
 				,
-				IconSmallName = NotificationIconName
+				IconSmallName = CreateSmallIcon()
 #endif
 			}
 		};
@@ -116,7 +123,7 @@ public class NotificationService
 #if DEBUG
 		System.Diagnostics.Debug.WriteLine("[NotificationService] Sending test notification.");
 #endif
-		await LocalNotificationCenter.Current.Cancel(TestNotificationId);
+		LocalNotificationCenter.Current.Cancel(TestNotificationId);
 		await LocalNotificationCenter.Current.Show(request);
 		return true;
 #else
@@ -145,12 +152,12 @@ public class NotificationService
 				ChannelId = NotificationChannelId
 #if ANDROID
 				,
-				IconSmallName = NotificationIconName
+				IconSmallName = CreateSmallIcon()
 #endif
 			},
 			Schedule = new NotificationRequestSchedule
 			{
-				NotifyTime = localTime.ToUniversalTime(),
+				NotifyTime = localTime,
 				NotifyRepeatInterval = null
 			}
 		};
@@ -158,7 +165,7 @@ public class NotificationService
 		System.Diagnostics.Debug.WriteLine($"[NotificationService] Scheduling notification {id}: {title} at {localTime} (UTC: {localTime.ToUniversalTime()})");
 #endif
 		// Cancel previous if re-scheduling
-		await LocalNotificationCenter.Current.Cancel(id);
+		LocalNotificationCenter.Current.Cancel(id);
 		await LocalNotificationCenter.Current.Show(request);
 	}
 
@@ -174,7 +181,7 @@ public class NotificationService
 				ChannelId = NotificationChannelId
 #if ANDROID
 				,
-				IconSmallName = NotificationIconName
+				IconSmallName = CreateSmallIcon()
 #endif
 			}
 		};
@@ -182,7 +189,7 @@ public class NotificationService
 		System.Diagnostics.Debug.WriteLine($"[NotificationService] Sending immediate notification {id}: {title} - {body}");
 #endif
 		// Cancel previous
-		await LocalNotificationCenter.Current.Cancel(id);
+		LocalNotificationCenter.Current.Cancel(id);
 		// Use Show() for immediate notifications (no schedule)
 		await LocalNotificationCenter.Current.Show(request);
 	}

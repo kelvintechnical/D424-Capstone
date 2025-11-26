@@ -120,7 +120,7 @@ public partial class CourseDetailViewModel : ObservableObject
 			Course.InstructorId = Instructor.Id;
 			await _db.SaveCourseAsync(Course);
 
-			// Schedule notifications for course start/end at 9 AM local time
+			// Schedule notifications for course start/end using the exact user-selected times
 			await _notifications.ScheduleCourseNotificationsAsync(
 				Course.Id,
 				Course.Title,

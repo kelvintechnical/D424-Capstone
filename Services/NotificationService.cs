@@ -30,8 +30,8 @@ public class NotificationService
 		LocalNotificationCenter.Current.Cancel(startId);
 		LocalNotificationCenter.Current.Cancel(endId);
 		if (!enabled) return;
-		await ScheduleAsync(startId, $"Course Starts: {courseTitle}", "Starts today", ToNineAmLocal(startUtc));
-		await ScheduleAsync(endId, $"Course Ends: {courseTitle}", "Ends today", ToNineAmLocal(endUtc));
+		await ScheduleAsync(startId, $"Course Starts: {courseTitle}", "Starts today", ToLocal(startUtc));
+		await ScheduleAsync(endId, $"Course Ends: {courseTitle}", "Ends today", ToLocal(endUtc));
 #else
 		// Notifications not supported on Windows
 		await Task.CompletedTask;
@@ -46,8 +46,8 @@ public class NotificationService
 		LocalNotificationCenter.Current.Cancel(startId);
 		LocalNotificationCenter.Current.Cancel(dueId);
 		if (!enabled) return;
-		await ScheduleAsync(startId, $"Assessment Starts: {assessmentName}", "Starts today", ToNineAmLocal(startUtc));
-		await ScheduleAsync(dueId, $"Assessment Due: {assessmentName}", "Due today", ToNineAmLocal(dueUtc));
+		await ScheduleAsync(startId, $"Assessment Starts: {assessmentName}", "Starts today", ToLocal(startUtc));
+		await ScheduleAsync(dueId, $"Assessment Due: {assessmentName}", "Due today", ToLocal(dueUtc));
 #else
 		// Notifications not supported on Windows
 		await Task.CompletedTask;
@@ -134,14 +134,9 @@ public class NotificationService
 
 #if ANDROID || IOS
 	private static int GetNotificationId(int entityId, string suffix) => (entityId.ToString() + "_" + suffix).GetHashCode();
-	private static DateTime ToNineAmLocal(DateTime utc)
-	{
-		var localDate = utc.ToLocalTime().Date;
-		return new DateTime(localDate.Year, localDate.Month, localDate.Day, 9, 0, 0, DateTimeKind.Local);
-	}
-
 	private static async Task ScheduleAsync(int id, string title, string body, DateTime localTime)
 	{
+		var normalizedLocal = EnsureLocal(localTime);
 		var request = new NotificationRequest
 		{
 			NotificationId = id,
@@ -157,7 +152,7 @@ public class NotificationService
 			},
 			Schedule = new NotificationRequestSchedule
 			{
-				NotifyTime = localTime,
+				NotifyTime = normalizedLocal,
 				NotifyRepeatInterval = null
 			}
 		};
@@ -192,6 +187,26 @@ public class NotificationService
 		LocalNotificationCenter.Current.Cancel(id);
 		// Use Show() for immediate notifications (no schedule)
 		await LocalNotificationCenter.Current.Show(request);
+	}
+#endif
+	private static DateTime ToLocal(DateTime dateTime)
+	{
+		return dateTime.Kind switch
+		{
+			DateTimeKind.Local => dateTime,
+			DateTimeKind.Utc => dateTime.ToLocalTime(),
+			_ => DateTime.SpecifyKind(dateTime, DateTimeKind.Utc).ToLocalTime()
+		};
+	}
+
+	private static DateTime EnsureLocal(DateTime dateTime)
+	{
+		return dateTime.Kind switch
+		{
+			DateTimeKind.Local => dateTime,
+			DateTimeKind.Utc => dateTime.ToLocalTime(),
+			_ => DateTime.SpecifyKind(dateTime, DateTimeKind.Local)
+		};
 	}
 #endif
 }

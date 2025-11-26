@@ -17,6 +17,17 @@ public partial class AssessmentViewModel : ObservableObject
 	[ObservableProperty] private bool canAddAssessment;
 	[ObservableProperty] private bool isLoading;
 	[ObservableProperty] private int courseId;
+	[ObservableProperty] private DateTime objectiveStartDate = DateTime.Today;
+	[ObservableProperty] private DateTime objectiveDueDate = DateTime.Today.AddDays(7);
+	[ObservableProperty] private TimeSpan objectiveStartTime = TimeSpan.FromHours(9);
+	[ObservableProperty] private TimeSpan objectiveDueTime = TimeSpan.FromHours(9);
+	[ObservableProperty] private DateTime performanceStartDate = DateTime.Today;
+	[ObservableProperty] private DateTime performanceDueDate = DateTime.Today.AddDays(7);
+	[ObservableProperty] private TimeSpan performanceStartTime = TimeSpan.FromHours(9);
+	[ObservableProperty] private TimeSpan performanceDueTime = TimeSpan.FromHours(9);
+
+	partial void OnObjectiveAssessmentChanged(Assessment? value) => SyncObjectiveEditors();
+	partial void OnPerformanceAssessmentChanged(Assessment? value) => SyncPerformanceEditors();
 
 	public AssessmentViewModel(DatabaseService db, NotificationService notifications)
 	{
@@ -32,12 +43,12 @@ public partial class AssessmentViewModel : ObservableObject
 		{
 			Assessments.Clear();
 			var list = await _db.GetAssessmentsByCourseAsync(courseId);
-			foreach (var a in list) 
-			{ 
-				// Convert UTC dates to local for display in date pickers
+			foreach (var a in list)
+			{
+				// Convert UTC dates to local for display
 				a.StartDate = ConvertUtcToLocal(a.StartDate);
 				a.DueDate = ConvertUtcToLocal(a.DueDate);
-				Assessments.Add(a); 
+				Assessments.Add(a);
 			}
 			ObjectiveAssessment = list.FirstOrDefault(a => a.Type == AssessmentType.Objective.ToString());
 			PerformanceAssessment = list.FirstOrDefault(a => a.Type == AssessmentType.Performance.ToString());
@@ -93,7 +104,17 @@ public partial class AssessmentViewModel : ObservableObject
 		       assessment.Type == AssessmentType.Performance.ToString();
 	}
 
-	public DateTime ConvertUtcToLocal(DateTime utcDate) => utcDate.ToLocalTime().Date;
+	public DateTime ConvertUtcToLocal(DateTime utcDate)
+	{
+		var utc = utcDate.Kind switch
+		{
+			DateTimeKind.Utc => utcDate,
+			DateTimeKind.Local => utcDate.ToUniversalTime(),
+			_ => DateTime.SpecifyKind(utcDate, DateTimeKind.Utc)
+		};
+		return utc.ToLocalTime();
+	}
+
 	public DateTime ConvertLocalToUtc(DateTime localDate) => DateTime.SpecifyKind(localDate, DateTimeKind.Local).ToUniversalTime();
 
 	[RelayCommand]
@@ -112,8 +133,8 @@ public partial class AssessmentViewModel : ObservableObject
 				CourseId = CourseId,
 				Name = "Objective Assessment",
 				Type = AssessmentType.Objective.ToString(),
-				StartDate = ConvertLocalToUtc(DateTime.Today),
-				DueDate = ConvertLocalToUtc(DateTime.Today.AddDays(7)),
+				StartDate = CombineDateAndTime(DateTime.Today, TimeSpan.FromHours(9)),
+				DueDate = CombineDateAndTime(DateTime.Today.AddDays(7), TimeSpan.FromHours(9)),
 				NotificationsEnabled = true,
 				CreatedAt = DateTime.UtcNow
 			};
@@ -142,8 +163,8 @@ public partial class AssessmentViewModel : ObservableObject
 				CourseId = CourseId,
 				Name = "Performance Assessment",
 				Type = AssessmentType.Performance.ToString(),
-				StartDate = ConvertLocalToUtc(DateTime.Today),
-				DueDate = ConvertLocalToUtc(DateTime.Today.AddDays(7)),
+				StartDate = CombineDateAndTime(DateTime.Today, TimeSpan.FromHours(9)),
+				DueDate = CombineDateAndTime(DateTime.Today.AddDays(7), TimeSpan.FromHours(9)),
 				NotificationsEnabled = true,
 				CreatedAt = DateTime.UtcNow
 			};
@@ -162,6 +183,7 @@ public partial class AssessmentViewModel : ObservableObject
 		try
 		{
 			if (ObjectiveAssessment is null) return;
+			ApplyObjectiveEditors();
 			await SaveAssessmentAsync(ObjectiveAssessment);
             await Application.Current.Windows[0].Page.DisplayAlert("Success", "Objective assessment saved", "OK");
 		}
@@ -177,6 +199,7 @@ public partial class AssessmentViewModel : ObservableObject
 		try
 		{
 			if (PerformanceAssessment is null) return;
+			ApplyPerformanceEditors();
 			await SaveAssessmentAsync(PerformanceAssessment);
             await Application.Current.Windows[0].Page.DisplayAlert("Success", "Performance assessment saved", "OK");
 		}
@@ -184,6 +207,80 @@ public partial class AssessmentViewModel : ObservableObject
 		{
             await Application.Current.Windows[0].Page.DisplayAlert("Error", $"Failed to save assessment: {ex.Message}", "OK");
 		}
+
+	private void SyncObjectiveEditors()
+	{
+		if (ObjectiveAssessment is null)
+		{
+			ResetObjectiveEditors();
+			return;
+		}
+
+		var localStart = NormalizeLocal(ObjectiveAssessment.StartDate);
+		var localDue = NormalizeLocal(ObjectiveAssessment.DueDate);
+		ObjectiveStartDate = localStart.Date;
+		ObjectiveStartTime = localStart.TimeOfDay;
+		ObjectiveDueDate = localDue.Date;
+		ObjectiveDueTime = localDue.TimeOfDay;
+	}
+
+	private void SyncPerformanceEditors()
+	{
+		if (PerformanceAssessment is null)
+		{
+			ResetPerformanceEditors();
+			return;
+		}
+
+		var localStart = NormalizeLocal(PerformanceAssessment.StartDate);
+		var localDue = NormalizeLocal(PerformanceAssessment.DueDate);
+		PerformanceStartDate = localStart.Date;
+		PerformanceStartTime = localStart.TimeOfDay;
+		PerformanceDueDate = localDue.Date;
+		PerformanceDueTime = localDue.TimeOfDay;
+	}
+
+	private void ApplyObjectiveEditors()
+	{
+		if (ObjectiveAssessment is null) return;
+		ObjectiveAssessment.StartDate = CombineDateAndTime(ObjectiveStartDate, ObjectiveStartTime);
+		ObjectiveAssessment.DueDate = CombineDateAndTime(ObjectiveDueDate, ObjectiveDueTime);
+	}
+
+	private void ApplyPerformanceEditors()
+	{
+		if (PerformanceAssessment is null) return;
+		PerformanceAssessment.StartDate = CombineDateAndTime(PerformanceStartDate, PerformanceStartTime);
+		PerformanceAssessment.DueDate = CombineDateAndTime(PerformanceDueDate, PerformanceDueTime);
+	}
+
+	private void ResetObjectiveEditors()
+	{
+		ObjectiveStartDate = DateTime.Today;
+		ObjectiveStartTime = TimeSpan.FromHours(9);
+		ObjectiveDueDate = DateTime.Today.AddDays(7);
+		ObjectiveDueTime = TimeSpan.FromHours(9);
+	}
+
+	private void ResetPerformanceEditors()
+	{
+		PerformanceStartDate = DateTime.Today;
+		PerformanceStartTime = TimeSpan.FromHours(9);
+		PerformanceDueDate = DateTime.Today.AddDays(7);
+		PerformanceDueTime = TimeSpan.FromHours(9);
+	}
+
+	private static DateTime CombineDateAndTime(DateTime date, TimeSpan time) =>
+		DateTime.SpecifyKind(date.Date + time, DateTimeKind.Local);
+
+	private static DateTime NormalizeLocal(DateTime dateTime)
+	{
+		return dateTime.Kind switch
+		{
+			DateTimeKind.Local => dateTime,
+			DateTimeKind.Utc => dateTime.ToLocalTime(),
+			_ => DateTime.SpecifyKind(dateTime, DateTimeKind.Local)
+		};
 	}
 
 	[RelayCommand]

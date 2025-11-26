@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Maui.LifecycleEvents;
 using CommunityToolkit.Maui;
 using StudentProgressTracker.Services;
 using StudentProgressTracker.ViewModels;

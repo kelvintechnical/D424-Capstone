@@ -19,11 +19,13 @@
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                     <VerticalStackLayout>
                         <Label Text="Start" />
-                        <DatePicker Date="{Binding ObjectiveAssessment.StartDate}" />
+                        <DatePicker Date="{Binding ObjectiveStartDate}" />
+                        <TimePicker Time="{Binding ObjectiveStartTime}" />
                     </VerticalStackLayout>
                     <VerticalStackLayout Grid.Column="1">
                         <Label Text="Due" />
-                        <DatePicker Date="{Binding ObjectiveAssessment.DueDate}" />
+                        <DatePicker Date="{Binding ObjectiveDueDate}" />
+                        <TimePicker Time="{Binding ObjectiveDueTime}" />
                     </VerticalStackLayout>
                 </Grid>
                 <HorizontalStackLayout Spacing="12">
@@ -43,11 +45,13 @@
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                     <VerticalStackLayout>
                         <Label Text="Start" />
-                        <DatePicker Date="{Binding PerformanceAssessment.StartDate}" />
+                        <DatePicker Date="{Binding PerformanceStartDate}" />
+                        <TimePicker Time="{Binding PerformanceStartTime}" />
                     </VerticalStackLayout>
                     <VerticalStackLayout Grid.Column="1">
                         <Label Text="Due" />
-                        <DatePicker Date="{Binding PerformanceAssessment.DueDate}" />
+                        <DatePicker Date="{Binding PerformanceDueDate}" />
+                        <TimePicker Time="{Binding PerformanceDueTime}" />
                     </VerticalStackLayout>
                 </Grid>
                 <HorizontalStackLayout Spacing="12">

@@ -9,6 +9,9 @@ public class NotificationService
 {
 #if ANDROID || IOS
 	private const string NotificationChannelId = "general";
+#if ANDROID
+	private const string NotificationIconName = "notification_icon";
+#endif
 	private const int TestNotificationId = 9_999_999;
 #endif
 
@@ -103,6 +106,10 @@ public class NotificationService
 			{
 				ChannelId = NotificationChannelId,
 				LaunchAppWhenTapped = true
+#if ANDROID
+				,
+				IconName = NotificationIconName
+#endif
 			}
 		};
 
@@ -136,6 +143,10 @@ public class NotificationService
 			Android = new AndroidOptions
 			{
 				ChannelId = NotificationChannelId
+#if ANDROID
+				,
+				IconName = NotificationIconName
+#endif
 			},
 			Schedule = new NotificationRequestSchedule
 			{
@@ -162,6 +173,10 @@ public class NotificationService
 			Android = new AndroidOptions
 			{
 				ChannelId = NotificationChannelId
+#if ANDROID
+				,
+				IconName = NotificationIconName
+#endif
 			}
 		};
 #if DEBUG

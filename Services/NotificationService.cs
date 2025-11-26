@@ -83,10 +83,10 @@ public class NotificationService
 	public async Task<bool> SendTestNotificationAsync(string? title = null, string? message = null)
 	{
 #if ANDROID || IOS
-		var notificationsEnabled = await LocalNotificationCenter.Current.AreNotificationsEnabled();
+		var notificationsEnabled = LocalNotificationCenter.Current.AreNotificationsEnabled();
 		if (!notificationsEnabled)
 		{
-			notificationsEnabled = await LocalNotificationCenter.Current.RequestNotificationPermission();
+			notificationsEnabled = LocalNotificationCenter.Current.RequestNotificationPermission();
 		}
 
 		if (!notificationsEnabled)
@@ -108,7 +108,7 @@ public class NotificationService
 				LaunchAppWhenTapped = true
 #if ANDROID
 				,
-				IconName = NotificationIconName
+				IconSmallName = NotificationIconName
 #endif
 			}
 		};
@@ -145,7 +145,7 @@ public class NotificationService
 				ChannelId = NotificationChannelId
 #if ANDROID
 				,
-				IconName = NotificationIconName
+				IconSmallName = NotificationIconName
 #endif
 			},
 			Schedule = new NotificationRequestSchedule
@@ -159,8 +159,7 @@ public class NotificationService
 #endif
 		// Cancel previous if re-scheduling
 		await LocalNotificationCenter.Current.Cancel(id);
-		// MUST use Schedule(), not Show()
-		await LocalNotificationCenter.Current.Schedule(request);
+		await LocalNotificationCenter.Current.Show(request);
 	}
 
 	private static async Task ScheduleImmediateAsync(int id, string title, string body)
@@ -175,7 +174,7 @@ public class NotificationService
 				ChannelId = NotificationChannelId
 #if ANDROID
 				,
-				IconName = NotificationIconName
+				IconSmallName = NotificationIconName
 #endif
 			}
 		};

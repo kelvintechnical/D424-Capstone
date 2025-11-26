@@ -1,10 +1,12 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.LifecycleEvents;
 using CommunityToolkit.Maui;
 using StudentProgressTracker.Services;
 using StudentProgressTracker.ViewModels;
 using StudentProgressTracker.Helpers;
 #if ANDROID || IOS
 using Plugin.LocalNotification;
+using Plugin.LocalNotification.EventArgs;
 #endif
 #if ANDROID
 using Plugin.LocalNotification.AndroidOption;
@@ -138,13 +140,16 @@ public static class MauiProgram
 		});
 #endif
 
-		LocalNotificationCenter.Current.NotificationActionTapped += (_, e) =>
-		{
-#if DEBUG
-			System.Diagnostics.Debug.WriteLine($"[MauiProgram] Notification tapped: {e.NotificationId}");
+		LocalNotificationCenter.Current.NotificationActionTapped += OnNotificationActionTapped;
+	}
 #endif
-		};
+	
+#if ANDROID || IOS
+	private static void OnNotificationActionTapped(NotificationActionEventArgs e)
+	{
+#if DEBUG
+		System.Diagnostics.Debug.WriteLine($"[MauiProgram] Notification tapped: {e.NotificationId}");
+#endif
 	}
 #endif
 }
-

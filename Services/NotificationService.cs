@@ -7,6 +7,11 @@ namespace StudentProgressTracker.Services;
 
 public class NotificationService
 {
+#if ANDROID || IOS
+	private const string NotificationChannelId = "general";
+	private const int TestNotificationId = 9_999_999;
+#endif
+
 	public async Task ScheduleCourseNotificationsAsync(int courseId, string courseTitle, DateTime startUtc, DateTime endUtc, bool enabled)
 	{
 #if ANDROID || IOS
@@ -72,6 +77,47 @@ public class NotificationService
 #endif
 	}
 
+	public async Task<bool> SendTestNotificationAsync(string? title = null, string? message = null)
+	{
+#if ANDROID || IOS
+		var notificationsEnabled = await LocalNotificationCenter.Current.AreNotificationsEnabled();
+		if (!notificationsEnabled)
+		{
+			notificationsEnabled = await LocalNotificationCenter.Current.RequestNotificationPermission();
+		}
+
+		if (!notificationsEnabled)
+		{
+#if DEBUG
+			System.Diagnostics.Debug.WriteLine("[NotificationService] Notifications disabled or permission denied.");
+#endif
+			return false;
+		}
+
+		var request = new NotificationRequest
+		{
+			NotificationId = TestNotificationId,
+			Title = title ?? "Student Progress Tracker",
+			Description = message ?? "If you see this, local notifications are configured correctly.",
+			Android = new AndroidOptions
+			{
+				ChannelId = NotificationChannelId,
+				LaunchAppWhenTapped = true
+			}
+		};
+
+#if DEBUG
+		System.Diagnostics.Debug.WriteLine("[NotificationService] Sending test notification.");
+#endif
+		await LocalNotificationCenter.Current.Cancel(TestNotificationId);
+		await LocalNotificationCenter.Current.Show(request);
+		return true;
+#else
+		await Task.CompletedTask;
+		return false;
+#endif
+	}
+
 #if ANDROID || IOS
 	private static int GetNotificationId(int entityId, string suffix) => (entityId.ToString() + "_" + suffix).GetHashCode();
 	private static DateTime ToNineAmLocal(DateTime utc)
@@ -89,7 +135,7 @@ public class NotificationService
 			Description = body,
 			Android = new AndroidOptions
 			{
-				ChannelId = "general"
+				ChannelId = NotificationChannelId
 			},
 			Schedule = new NotificationRequestSchedule
 			{
@@ -115,7 +161,7 @@ public class NotificationService
 			Description = body,
 			Android = new AndroidOptions
 			{
-				ChannelId = "general"
+				ChannelId = NotificationChannelId
 			}
 		};
 #if DEBUG

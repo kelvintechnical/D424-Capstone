@@ -6,6 +6,9 @@ using StudentProgressTracker.Helpers;
 #if ANDROID || IOS
 using Plugin.LocalNotification;
 #endif
+#if ANDROID
+using Plugin.LocalNotification.AndroidOption;
+#endif
 
 namespace StudentProgressTracker;
 
@@ -29,6 +32,10 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
 		#pragma warning restore CA1416
+
+#if ANDROID || IOS
+		ConfigureLocalNotifications(builder);
+#endif
 
 #if DEBUG
 		builder.Logging.AddDebug();
@@ -102,5 +109,42 @@ public static class MauiProgram
 
 		return app;
 	}
+
+#if ANDROID || IOS
+	private static void ConfigureLocalNotifications(MauiAppBuilder builder)
+	{
+#if ANDROID
+		builder.ConfigureLifecycleEvents(events =>
+		{
+			events.AddAndroid(android =>
+			{
+				android.OnApplicationCreate(_ =>
+				{
+					LocalNotificationCenter.CreateNotificationChannel(new NotificationChannelRequest
+					{
+						Id = "general",
+						Name = "General Notifications",
+						Description = "Course and assessment reminders",
+						Importance = NotificationImportance.High
+					});
+
+					LocalNotificationCenter.Current.Initialize();
+
+#if DEBUG
+					System.Diagnostics.Debug.WriteLine("[MauiProgram] LocalNotificationCenter initialized");
+#endif
+				});
+			});
+		});
+#endif
+
+		LocalNotificationCenter.Current.NotificationActionTapped += (_, e) =>
+		{
+#if DEBUG
+			System.Diagnostics.Debug.WriteLine($"[MauiProgram] Notification tapped: {e.NotificationId}");
+#endif
+		};
+	}
+#endif
 }
 

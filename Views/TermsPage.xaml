@@ -50,9 +50,10 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" VerticalOptions="End" ColumnSpacing="8">
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" VerticalOptions="End" ColumnSpacing="8">
             <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" HorizontalOptions="Start" />
-            <Button Grid.Column="1" Text="+ Add Term" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding AddCommand}" />
+            <Button Grid.Column="1" Text="🔔 Test" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding TestNotificationCommand}" FontSize="12" />
+            <Button Grid.Column="2" Text="+ Add Term" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding AddCommand}" />
         </Grid>
     </Grid>
 </ContentPage>

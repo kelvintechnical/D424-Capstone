@@ -30,6 +30,9 @@
 		<AndroidDexTool Condition="'$(Configuration)' == 'Debug'">d8</AndroidDexTool>
 		<ProguardConfigFiles Condition="Exists('Platforms\Android\proguard.cfg')">$(ProguardConfigFiles);Platforms\Android\proguard.cfg</ProguardConfigFiles>
 		
+		<!-- Disable Fast Deployment to fix XA0129 error -->
+		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+		
 		<!-- Windows Package Type -->
 		<WindowsPackageType Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">None</WindowsPackageType>
 		
@@ -52,6 +55,9 @@
 
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" Condition="Exists('Resources\Raw')" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+		
+		<!-- Android Drawable Resources -->
+		<AndroidResource Include="Resources\Drawable\**" Condition="Exists('Resources\Drawable')" />
 	</ItemGroup>
 
 	<ItemGroup>

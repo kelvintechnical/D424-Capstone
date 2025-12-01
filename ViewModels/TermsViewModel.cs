@@ -147,6 +147,36 @@ public partial class TermsViewModel : ObservableObject
 		}
 	}
 
+	[RelayCommand]
+	private async Task TestNotificationAsync()
+	{
+		try
+		{
+			var result = await _notifications.SendTestNotificationAsync(
+				"Test Notification",
+				"If you see this notification, notifications are working correctly!");
+			
+			if (!result)
+			{
+				await Application.Current.MainPage.DisplayAlert(
+					"Notifications Disabled",
+					"Notifications are disabled. Please enable them in:\n\nSettings > Apps > Student Progress Tracker > Notifications",
+					"OK");
+			}
+			else
+			{
+				await Application.Current.MainPage.DisplayAlert(
+					"Test Notification Sent",
+					"A test notification has been sent. Check your notification tray!",
+					"OK");
+			}
+		}
+		catch (Exception ex)
+		{
+			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to send test notification: {ex.Message}", "OK");
+		}
+	}
+
 }
 
 

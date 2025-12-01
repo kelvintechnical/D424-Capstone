@@ -88,6 +88,15 @@ public partial class AssessmentViewModel : ObservableObject
 			assessment.StartDate,
 			assessment.DueDate,
 			assessment.NotificationsEnabled);
+		
+		// Also send immediate notifications for testing/demonstration purposes
+		if (assessment.NotificationsEnabled)
+		{
+			await _notifications.SendImmediateAssessmentNotificationsAsync(
+				assessment.Id,
+				assessment.Name,
+				assessment.NotificationsEnabled);
+		}
 
 		await LoadAssessmentsAsync(assessment.CourseId);
 	}
@@ -201,12 +210,13 @@ public partial class AssessmentViewModel : ObservableObject
 			if (PerformanceAssessment is null) return;
 			ApplyPerformanceEditors();
 			await SaveAssessmentAsync(PerformanceAssessment);
-            await Application.Current.Windows[0].Page.DisplayAlert("Success", "Performance assessment saved", "OK");
+			await Application.Current.Windows[0].Page.DisplayAlert("Success", "Performance assessment saved", "OK");
 		}
 		catch (Exception ex)
 		{
-            await Application.Current.Windows[0].Page.DisplayAlert("Error", $"Failed to save assessment: {ex.Message}", "OK");
+			await Application.Current.Windows[0].Page.DisplayAlert("Error", $"Failed to save assessment: {ex.Message}", "OK");
 		}
+	}
 
 	private void SyncObjectiveEditors()
 	{

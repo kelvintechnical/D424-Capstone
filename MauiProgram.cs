@@ -73,8 +73,8 @@ public static class MauiProgram
 			DatabaseService.Current = db;
 			
 			// Initialize on background thread to avoid blocking UI
-			// This ensures database is ready before page loads data
-			var initTask = Task.Run(async () =>
+			// Fire and forget - UI will handle loading state
+			_ = Task.Run(async () =>
 			{
 				try
 				{
@@ -90,12 +90,6 @@ public static class MauiProgram
 #endif
 				}
 			});
-			
-			// On Android, wait a short time for initialization to complete
-			// This prevents race conditions but doesn't block indefinitely
-#if ANDROID
-			initTask.Wait(TimeSpan.FromSeconds(2));
-#endif
 		}
 		catch (Exception ex)
 		{
@@ -111,23 +105,39 @@ public static class MauiProgram
 #if ANDROID || IOS
 	private static void ConfigureLocalNotifications(MauiAppBuilder builder)
 	{
-		builder.UseLocalNotification(config =>
+		try
 		{
-#if ANDROID
-			config.AddAndroid(android =>
+			builder.UseLocalNotification(config =>
 			{
-				android.AddChannel(new NotificationChannelRequest
+#if ANDROID
+				config.AddAndroid(android =>
 				{
-					Id = NotificationService.NotificationChannelId,
-					Name = "General Notifications",
-					Description = "Course and assessment reminders",
-					Importance = AndroidImportance.High
+					android.AddChannel(new NotificationChannelRequest
+					{
+						Id = NotificationService.NotificationChannelId,
+						Name = "General Notifications",
+						Description = "Course and assessment reminders",
+						Importance = AndroidImportance.High
+					});
 				});
-			});
 #endif
-		});
+			});
 
-		LocalNotificationCenter.Current.NotificationActionTapped += OnNotificationActionTapped;
+			LocalNotificationCenter.Current.NotificationActionTapped += OnNotificationActionTapped;
+			
+#if DEBUG
+			System.Diagnostics.Debug.WriteLine("[MauiProgram] Local notifications configured successfully");
+			System.Diagnostics.Debug.WriteLine($"[MauiProgram] Notification channel ID: {NotificationService.NotificationChannelId}");
+#endif
+		}
+		catch (Exception ex)
+		{
+#if DEBUG
+			System.Diagnostics.Debug.WriteLine($"[MauiProgram] Error configuring local notifications: {ex.Message}");
+			System.Diagnostics.Debug.WriteLine($"[MauiProgram] Stack trace: {ex.StackTrace}");
+#endif
+			// Continue without notifications - app should still work
+		}
 	}
 #endif
 	

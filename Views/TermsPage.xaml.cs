@@ -7,50 +7,8 @@ public partial class TermsPage : ContentPage
 {
 	public TermsPage()
 	{
-		try
-		{
-			InitializeComponent();
-			
-			// Try to get ViewModel with error handling
-			try
-			{
-				if (ServiceHelper.Services != null)
-				{
-					BindingContext = ServiceHelper.GetRequiredService<TermsViewModel>();
-				}
-				else
-				{
-					System.Diagnostics.Debug.WriteLine("[TermsPage] ServiceHelper.Services is null");
-					// Create a minimal ViewModel instance as fallback
-					var db = new Services.DatabaseService(Path.Combine(FileSystem.AppDataDirectory, "student-progress.db3"));
-					var notifications = new Services.NotificationService();
-					BindingContext = new TermsViewModel(db, notifications);
-				}
-			}
-			catch (Exception ex)
-			{
-				System.Diagnostics.Debug.WriteLine($"[TermsPage] Failed to get ViewModel: {ex.Message}");
-				System.Diagnostics.Debug.WriteLine($"[TermsPage] Stack trace: {ex.StackTrace}");
-				// Create a minimal ViewModel instance as fallback
-				try
-				{
-					var db = new Services.DatabaseService(Path.Combine(FileSystem.AppDataDirectory, "student-progress.db3"));
-					var notifications = new Services.NotificationService();
-					BindingContext = new TermsViewModel(db, notifications);
-				}
-				catch (Exception ex2)
-				{
-					System.Diagnostics.Debug.WriteLine($"[TermsPage] Failed to create fallback ViewModel: {ex2.Message}");
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			System.Diagnostics.Debug.WriteLine($"[TermsPage] Constructor error: {ex.Message}");
-			System.Diagnostics.Debug.WriteLine($"[TermsPage] Stack trace: {ex.StackTrace}");
-			// Re-throw to see the full error in logs
-			throw;
-		}
+		InitializeComponent();
+		BindingContext = ServiceHelper.GetRequiredService<TermsViewModel>();
 	}
 
 	protected override async void OnAppearing()

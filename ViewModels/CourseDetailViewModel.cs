@@ -127,15 +127,6 @@ public partial class CourseDetailViewModel : ObservableObject
 				Course.StartDate,
 				Course.EndDate,
 				Course.NotificationsEnabled);
-			
-			// Also send immediate notifications for testing/demonstration purposes
-			if (Course.NotificationsEnabled)
-			{
-				await _notifications.SendImmediateCourseNotificationsAsync(
-					Course.Id,
-					Course.Title,
-					Course.NotificationsEnabled);
-			}
 		}
 		finally
 		{

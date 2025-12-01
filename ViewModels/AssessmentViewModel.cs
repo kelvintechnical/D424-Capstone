@@ -88,15 +88,6 @@ public partial class AssessmentViewModel : ObservableObject
 			assessment.StartDate,
 			assessment.DueDate,
 			assessment.NotificationsEnabled);
-		
-		// Also send immediate notifications for testing/demonstration purposes
-		if (assessment.NotificationsEnabled)
-		{
-			await _notifications.SendImmediateAssessmentNotificationsAsync(
-				assessment.Id,
-				assessment.Name,
-				assessment.NotificationsEnabled);
-		}
 
 		await LoadAssessmentsAsync(assessment.CourseId);
 	}

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentProgressTracker", "StudentProgressTracker.csproj", "{EF6DA53D-8124-4247-BBAB-55223E558260}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentLifeTracker.API", "StudentLifeTracker.API\StudentLifeTracker.API.csproj", "{0E34ACCE-C062-4BBE-88D9-6155D78300F2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,6 +19,7 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{EF6DA53D-8124-4247-BBAB-55223E558260}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EF6DA53D-8124-4247-BBAB-55223E558260}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF6DA53D-8124-4247-BBAB-55223E558260}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{EF6DA53D-8124-4247-BBAB-55223E558260}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{EF6DA53D-8124-4247-BBAB-55223E558260}.Debug|x64.Build.0 = Debug|Any CPU
 		{EF6DA53D-8124-4247-BBAB-55223E558260}.Debug|x86.ActiveCfg = Debug|Any CPU
@@ -27,8 +30,23 @@ Global
 		{EF6DA53D-8124-4247-BBAB-55223E558260}.Release|x64.Build.0 = Release|Any CPU
 		{EF6DA53D-8124-4247-BBAB-55223E558260}.Release|x86.ActiveCfg = Release|Any CPU
 		{EF6DA53D-8124-4247-BBAB-55223E558260}.Release|x86.Build.0 = Release|Any CPU
+		{0E34ACCE-C062-4BBE-88D9-6155D78300F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E34ACCE-C062-4BBE-88D9-6155D78300F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E34ACCE-C062-4BBE-88D9-6155D78300F2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0E34ACCE-C062-4BBE-88D9-6155D78300F2}.Debug|x64.Build.0 = Debug|Any CPU
+		{0E34ACCE-C062-4BBE-88D9-6155D78300F2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0E34ACCE-C062-4BBE-88D9-6155D78300F2}.Debug|x86.Build.0 = Debug|Any CPU
+		{0E34ACCE-C062-4BBE-88D9-6155D78300F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E34ACCE-C062-4BBE-88D9-6155D78300F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E34ACCE-C062-4BBE-88D9-6155D78300F2}.Release|x64.ActiveCfg = Release|Any CPU
+		{0E34ACCE-C062-4BBE-88D9-6155D78300F2}.Release|x64.Build.0 = Release|Any CPU
+		{0E34ACCE-C062-4BBE-88D9-6155D78300F2}.Release|x86.ActiveCfg = Release|Any CPU
+		{0E34ACCE-C062-4BBE-88D9-6155D78300F2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5890CB86-6C35-4AA6-B565-F59FA0C1383F}
 	EndGlobalSection
 EndGlobal

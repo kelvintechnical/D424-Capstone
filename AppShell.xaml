@@ -7,6 +7,15 @@
     Title="StudentProgressTracker"
     BackgroundColor="{StaticResource Primary}">
 
+    <!-- Auth Pages (not in TabBar) -->
+    <ShellContent
+        ContentTemplate="{DataTemplate views:LoginPage}"
+        Route="LoginPage" />
+    <ShellContent
+        ContentTemplate="{DataTemplate views:RegisterPage}"
+        Route="RegisterPage" />
+
+    <!-- Main App (Protected) -->
     <TabBar>
         <ShellContent
             Title="Terms"

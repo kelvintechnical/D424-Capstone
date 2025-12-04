@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="StudentProgressTracker.Views.RegisterPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodel="clr-namespace:StudentProgressTracker.ViewModels"
+             x:DataType="viewmodel:RegisterViewModel"
+             Title="Register">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="30" Spacing="20" VerticalOptions="Center">
+            
+            <Label Text="Create Account" 
+                   FontSize="28" 
+                   FontAttributes="Bold" 
+                   HorizontalOptions="Center" 
+                   Margin="0,0,0,30"/>
+
+            <!-- Name Entry -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Name" FontSize="14" />
+                <Entry Text="{Binding Name}" 
+                       Placeholder="Enter your name"
+                       IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
+            </VerticalStackLayout>
+
+            <!-- Email Entry -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Email" FontSize="14" />
+                <Entry Text="{Binding Email}" 
+                       Placeholder="Enter your email"
+                       Keyboard="Email"
+                       IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
+            </VerticalStackLayout>
+
+            <!-- Password Entry -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Password" FontSize="14" />
+                <Entry Text="{Binding Password}" 
+                       Placeholder="Enter password (min 6 characters)"
+                       IsPassword="True"
+                       IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
+            </VerticalStackLayout>
+
+            <!-- Confirm Password Entry -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Confirm Password" FontSize="14" />
+                <Entry Text="{Binding ConfirmPassword}" 
+                       Placeholder="Confirm your password"
+                       IsPassword="True"
+                       IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
+            </VerticalStackLayout>
+
+            <!-- Error Message -->
+            <Label Text="{Binding ErrorMessage}" 
+                   TextColor="Red" 
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource IsStringNotEmptyConverter}}"
+                   FontSize="12" />
+
+            <!-- Register Button -->
+            <Button Text="Register" 
+                    Command="{Binding RegisterCommand}"
+                    IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"
+                    BackgroundColor="#512BD4"
+                    TextColor="White"
+                    CornerRadius="5"
+                    HeightRequest="50"
+                    Margin="0,10,0,0" />
+
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}" 
+                             IsVisible="{Binding IsLoading}"
+                             Color="#512BD4"
+                             HeightRequest="30" />
+
+            <!-- Login Link -->
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="5" Margin="0,20,0,0">
+                <Label Text="Already have an account?" />
+                <Label Text="Login" 
+                       TextColor="#512BD4"
+                       TextDecorations="Underline">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateToLoginCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

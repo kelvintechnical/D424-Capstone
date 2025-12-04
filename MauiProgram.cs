@@ -48,8 +48,13 @@ public static class MauiProgram
 		var dbPath = Path.Combine(appDataDir, "student-progress.db3");
 		builder.Services.AddSingleton(new DatabaseService(dbPath));
 		builder.Services.AddSingleton<NotificationService>();
+		
+		// API Service
+		builder.Services.AddSingleton<Services.ApiService>();
 
 		// ViewModels
+		builder.Services.AddTransient<ViewModels.LoginViewModel>();
+		builder.Services.AddTransient<ViewModels.RegisterViewModel>();
 		builder.Services.AddSingleton<TermsViewModel>();
 		builder.Services.AddSingleton<TermDetailViewModel>();
 		builder.Services.AddSingleton<CourseListViewModel>();

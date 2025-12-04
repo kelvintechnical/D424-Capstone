@@ -73,6 +73,10 @@
 		<PackageReference Include="Xamarin.AndroidX.Collection.Ktx" Version="1.5.0.3" ExcludeAssets="all" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="StudentLifeTracker.Shared\StudentLifeTracker.Shared.csproj" />
+	</ItemGroup>
+
 
 	<!-- Exclude conflicting AndroidX Collection.Ktx package early in the build -->
 	<Target Name="ExcludeConflictingAndroidXPackages" BeforeTargets="_ResolveLibraryProjectImports">
@@ -108,24 +112,22 @@
 			<JavaLibraries Remove="@(JavaLibraries)" Condition="$([System.String]::Copy('%(Identity)').Contains('androidx.collection.collection-ktx.jar'))" />
 		</ItemGroup>
 
-		<Message Text="Removed @(_KtxToRemove->Count()) KTX references from _AndroidLibraryImports" Importance="high" />
+		<Message Text="Removed @(_KtxToRemove-&gt;Count()) KTX references from _AndroidLibraryImports" Importance="high" />
 		<Message Text="KTX entries removed: @(_KtxToRemove->'%(Identity)')" Importance="normal" Condition="'@(_KtxToRemove)' != ''" />
 	</Target>
 	
 	<!-- Also filter out non-existent files that might cause FileNotFoundException -->
 	<Target Name="FilterNonExistentKtxFiles" BeforeTargets="CheckDuplicateJavaLibraries" AfterTargets="RemoveKtxBeforeDuplicateCheck">
 		<ItemGroup>
-			<_NonExistentKtx Include="@(_AndroidLibraryImports)"
-				Condition="!Exists('%(Identity)') And ($([System.String]::Copy('%(Identity)').Contains('collection-ktx')) Or $([System.String]::Copy('%(Identity)').Contains('ktx')))" />
-			<_NonExistentKtxJava Include="@(JavaLibraries)"
-				Condition="!Exists('%(Identity)') And ($([System.String]::Copy('%(Identity)').Contains('collection-ktx')) Or $([System.String]::Copy('%(Identity)').Contains('ktx')))" />
+			<_NonExistentKtx Include="@(_AndroidLibraryImports)" Condition="!Exists('%(Identity)') And ($([System.String]::Copy('%(Identity)').Contains('collection-ktx')) Or $([System.String]::Copy('%(Identity)').Contains('ktx')))" />
+			<_NonExistentKtxJava Include="@(JavaLibraries)" Condition="!Exists('%(Identity)') And ($([System.String]::Copy('%(Identity)').Contains('collection-ktx')) Or $([System.String]::Copy('%(Identity)').Contains('ktx')))" />
 		</ItemGroup>
 		<ItemGroup>
 			<_AndroidLibraryImports Remove="@(_NonExistentKtx)" />
 			<JavaLibraries Remove="@(_NonExistentKtxJava)" />
 		</ItemGroup>
-		<Message Text="Filtered out @(_NonExistentKtx->Count()) non-existent KTX files from _AndroidLibraryImports" Importance="high" Condition="'@(_NonExistentKtx)' != ''" />
-		<Message Text="Filtered out @(_NonExistentKtxJava->Count()) non-existent KTX files from JavaLibraries" Importance="high" Condition="'@(_NonExistentKtxJava)' != ''" />
+		<Message Text="Filtered out @(_NonExistentKtx-&gt;Count()) non-existent KTX files from _AndroidLibraryImports" Importance="high" Condition="'@(_NonExistentKtx)' != ''" />
+		<Message Text="Filtered out @(_NonExistentKtxJava-&gt;Count()) non-existent KTX files from JavaLibraries" Importance="high" Condition="'@(_NonExistentKtxJava)' != ''" />
 	</Target>
 	
 	<!-- Create dummy KTX JAR file if it's referenced but missing (prevents FileNotFoundException) -->
@@ -137,11 +139,7 @@
 		<!-- Create directory if it doesn't exist -->
 		<MakeDir Directories="$(_KtxJarDir)" Condition="!Exists('$(_KtxJarDir)')" ContinueOnError="true" />
 		<!-- Create empty dummy JAR file to prevent FileNotFoundException -->
-		<WriteLinesToFile 
-			File="$(_KtxJarPath)" 
-			Lines=""
-			Condition="!Exists('$(_KtxJarPath)')"
-			ContinueOnError="true" />
+		<WriteLinesToFile File="$(_KtxJarPath)" Lines="" Condition="!Exists('$(_KtxJarPath)')" ContinueOnError="true" />
 		<Message Text="Created dummy KTX JAR at $(_KtxJarPath)" Importance="normal" Condition="Exists('$(_KtxJarPath)')" />
 	</Target>
 	
@@ -175,12 +173,9 @@
 	<Target Name="FixLifecycleViewModelConflicts" BeforeTargets="CheckDuplicateJavaLibraries">
 		<ItemGroup>
 			<!-- Remove lifecycle-viewmodel-android AAR references to prevent duplicate class errors -->
-			<_AndroidLibraryImports Remove="@(_AndroidLibraryImports)" 
-				Condition="$([System.String]::Copy('%(Identity)').Contains('lifecycle-viewmodel-android.aar'))" />
-			<_AndroidAarImports Remove="@(_AndroidAarImports)" 
-				Condition="$([System.String]::Copy('%(Identity)').Contains('lifecycle-viewmodel-android'))" />
-			<JavaLibraries Remove="@(JavaLibraries)" 
-				Condition="$([System.String]::Copy('%(Identity)').Contains('lifecycle-viewmodel-android'))" />
+			<_AndroidLibraryImports Remove="@(_AndroidLibraryImports)" Condition="$([System.String]::Copy('%(Identity)').Contains('lifecycle-viewmodel-android.aar'))" />
+			<_AndroidAarImports Remove="@(_AndroidAarImports)" Condition="$([System.String]::Copy('%(Identity)').Contains('lifecycle-viewmodel-android'))" />
+			<JavaLibraries Remove="@(JavaLibraries)" Condition="$([System.String]::Copy('%(Identity)').Contains('lifecycle-viewmodel-android'))" />
 		</ItemGroup>
 		<Message Text="Removed lifecycle-viewmodel-android AAR references to fix duplicate class errors" Importance="high" />
 	</Target>
@@ -188,10 +183,8 @@
 	<!-- Also remove from D8 inputs if it gets that far -->
 	<Target Name="RemoveLifecycleViewModelFromD8" BeforeTargets="_CompileToDalvik" AfterTargets="_CreateDexInputs">
 		<ItemGroup>
-			<_D8InputJars Remove="@(_D8InputJars)" 
-				Condition="$([System.String]::Copy('%(FullPath)').Contains('lifecycle-viewmodel-android'))" />
-			<_D8InputClasses Remove="@(_D8InputClasses)" 
-				Condition="$([System.String]::Copy('%(FullPath)').Contains('lifecycle-viewmodel-android'))" />
+			<_D8InputJars Remove="@(_D8InputJars)" Condition="$([System.String]::Copy('%(FullPath)').Contains('lifecycle-viewmodel-android'))" />
+			<_D8InputClasses Remove="@(_D8InputClasses)" Condition="$([System.String]::Copy('%(FullPath)').Contains('lifecycle-viewmodel-android'))" />
 		</ItemGroup>
 	</Target>
 

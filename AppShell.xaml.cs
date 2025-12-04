@@ -21,6 +21,11 @@ public partial class AppShell : Shell
 	{
 		try
 		{
+			// Auth routes
+			Routing.RegisterRoute(nameof(Views.LoginPage), typeof(Views.LoginPage));
+			Routing.RegisterRoute(nameof(Views.RegisterPage), typeof(Views.RegisterPage));
+			
+			// Main app routes
 			Routing.RegisterRoute(nameof(Views.CourseListPage), typeof(Views.CourseListPage));
 			Routing.RegisterRoute(nameof(Views.TermDetailPage), typeof(Views.TermDetailPage));
 			Routing.RegisterRoute(nameof(Views.CourseDetailPage), typeof(Views.CourseDetailPage));

@@ -338,10 +338,3 @@ public partial class AssessmentViewModel : ObservableObject
 		await Shell.Current.GoToAsync("..");
 	}
 }
-
-
-
-
-
-
-

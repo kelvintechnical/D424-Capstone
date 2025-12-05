@@ -51,6 +51,7 @@ public static class MauiProgram
 		
 		// API Service
 		builder.Services.AddSingleton<Services.ApiService>();
+		builder.Services.AddSingleton<Services.GPAService>();
 
 		// ViewModels
 		builder.Services.AddTransient<ViewModels.LoginViewModel>();
@@ -60,6 +61,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<CourseListViewModel>();
 		builder.Services.AddSingleton<CourseDetailViewModel>();
 		builder.Services.AddSingleton<AssessmentViewModel>();
+		builder.Services.AddSingleton<GPAViewModel>();
         builder.Services.AddSingleton<IAlertService, AlertService>();
 
 		// Suppress CA1416 warnings - Build() and Services are supported on our target platforms

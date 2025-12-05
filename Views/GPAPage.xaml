@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="StudentProgressTracker.Views.GPAPage"
+             xmlns:viewmodels="clr-namespace:StudentProgressTracker.ViewModels"
+             x:DataType="viewmodels:GPAViewModel"
+             Title="GPA Calculator">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="20">
+            <Label Text="GPA Calculator &amp; Projection" Style="{StaticResource Headline}" />
+
+            <!-- Current Term GPA -->
+            <Frame Padding="16" HasShadow="True" BorderColor="{StaticResource Primary}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Current Term GPA" FontSize="16" FontAttributes="Bold" />
+                    <Label Text="{Binding CurrentTermGPA, StringFormat='{0:F2}'}" 
+                           FontSize="36" FontAttributes="Bold" 
+                           TextColor="{StaticResource Primary}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Courses with Grades -->
+            <VerticalStackLayout Spacing="12">
+                <Label Text="Courses with Grades" FontSize="18" FontAttributes="Bold" />
+                <CollectionView ItemsSource="{Binding CoursesWithGrades}">
+                    <CollectionView.EmptyView>
+                        <Label Text="No grades recorded yet." 
+                               TextColor="{StaticResource Gray600}" 
+                               HorizontalTextAlignment="Center" 
+                               Margin="0,12" />
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="viewmodels:CourseGradeInfo">
+                            <Frame Padding="12" Margin="0,4" HasShadow="False" BorderColor="{StaticResource Gray200}">
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding CourseTitle}" FontAttributes="Bold" />
+                                        <Label Text="{Binding LetterGrade}" FontSize="24" FontAttributes="Bold" TextColor="{StaticResource Primary}" />
+                                        <Label>
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding Percentage, StringFormat='{0:F1}%'}" />
+                                                    <Span Text="  •  " />
+                                                    <Span Text="{Binding CreditHours, StringFormat='{0} credits'}" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1" 
+                                           Text="{Binding GradePoints, StringFormat='{0:F1} pts'}" 
+                                           VerticalOptions="Center" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!-- Grade Projection Tool -->
+            <Frame Padding="16" HasShadow="True" BorderColor="{StaticResource Secondary}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Grade Projection Tool" FontSize="18" FontAttributes="Bold" />
+                    <Label Text="Calculate what grade you need on the final to achieve your target grade." 
+                           TextColor="{StaticResource Gray600}" 
+                           FontSize="14" />
+
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Select Course" />
+                        <Picker ItemsSource="{Binding CoursesWithGrades}" 
+                                SelectedItem="{Binding SelectedCourse}"
+                                ItemDisplayBinding="{Binding CourseTitle, TargetNullValue='Select a course'}" />
+                    </VerticalStackLayout>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Current Grade (%)" />
+                            <Entry Text="{Binding CurrentGradeInput}" 
+                                   Keyboard="Numeric" 
+                                   Placeholder="0-100" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Final Weight" />
+                            <Entry Text="{Binding FinalWeightInput}" 
+                                   Keyboard="Numeric" 
+                                   Placeholder="0.0-1.0" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Target Grade" />
+                        <Picker ItemsSource="{Binding TargetGradeOptions}" 
+                                SelectedItem="{Binding SelectedTargetGrade}" />
+                    </VerticalStackLayout>
+
+                    <Button Text="Calculate Projection" 
+                            Command="{Binding CalculateProjectionCommand}"
+                            IsEnabled="{Binding IsCalculatingProjection, Converter={StaticResource InverseBoolConverter}}" />
+                    
+                    <ActivityIndicator IsVisible="{Binding IsCalculatingProjection}" 
+                                       IsRunning="{Binding IsCalculatingProjection}" />
+
+                    <Label Text="{Binding ProjectionResult}" 
+                           FontSize="16" 
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource Primary}"
+                           IsVisible="{Binding ProjectionResult, Converter={StaticResource IsStringNotEmptyConverter}}" />
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
+

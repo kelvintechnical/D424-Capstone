@@ -17,6 +17,10 @@ public class Course
 	public int InstructorId { get; set; }
 	public string? Notes { get; set; }
 	public bool NotificationsEnabled { get; set; } = true;
+	public int CreditHours { get; set; } = 3;
+	public double? CurrentGrade { get; set; }
+	[Ignore]
+	public string? LetterGrade { get; set; }
 	public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 	[Ignore]
 	public Instructor? Instructor { get; set; }

@@ -21,6 +21,10 @@
             Title="Terms"
             ContentTemplate="{DataTemplate views:TermsPage}"
             Route="TermsPage" />
+        <ShellContent
+            Title="GPA"
+            ContentTemplate="{DataTemplate views:GPAPage}"
+            Route="GPAPage" />
     </TabBar>
 
 </Shell>

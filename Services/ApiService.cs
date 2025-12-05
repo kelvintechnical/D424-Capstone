@@ -468,6 +468,27 @@ public class ApiService
         }
     }
 
+    public async Task<ApiResponse<GradeDTO>> SaveGradeAsync(GradeDTO grade)
+    {
+        return await PostAsync<GradeDTO>("/api/grades", grade);
+    }
+
+    public async Task<ApiResponse<List<GradeDTO>>> GetTermGradesAsync(int termId)
+    {
+        return await GetAsync<List<GradeDTO>>($"/api/grades/term/{termId}");
+    }
+
+    public async Task<ApiResponse<GpaResultDTO>> GetTermGPAAsync(int termId)
+    {
+        return await GetAsync<GpaResultDTO>($"/api/grades/gpa/{termId}");
+    }
+
+    public async Task<ApiResponse<GradeProjectionDTO>> GetGradeProjectionAsync(int courseId, double currentGrade, double finalWeight, string targetGrade)
+    {
+        var endpoint = $"/api/grades/projection/{courseId}?currentGrade={currentGrade}&finalWeight={finalWeight}&targetGrade={Uri.EscapeDataString(targetGrade)}";
+        return await GetAsync<GradeProjectionDTO>(endpoint);
+    }
+
     private async Task EnsureAuthenticatedAsync()
     {
         var token = await GetTokenAsync();

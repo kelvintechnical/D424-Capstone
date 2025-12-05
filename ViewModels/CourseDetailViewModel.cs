@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StudentProgressTracker.Models;
 using StudentProgressTracker.Services;
+using StudentLifeTracker.Shared.DTOs;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
@@ -12,6 +13,8 @@ public partial class CourseDetailViewModel : ObservableObject
 {
 	private readonly DatabaseService _db;
 	private readonly NotificationService _notifications;
+	private readonly ApiService _apiService;
+	private readonly GPAService _gpaService;
 
 	[ObservableProperty] private Course? course;
 	[ObservableProperty] private ObservableCollection<Assessment> assessments = new();
@@ -25,11 +28,42 @@ public partial class CourseDetailViewModel : ObservableObject
 	[ObservableProperty] private TimeSpan endTime = TimeSpan.FromHours(9);
 	[ObservableProperty] private bool isLoading;
 	[ObservableProperty] private bool isSaving;
+	[ObservableProperty] private int creditHours = 3;
+	[ObservableProperty] private string currentGrade = string.Empty;
+	[ObservableProperty] private string letterGrade = string.Empty;
+	[ObservableProperty] private string gradePoints = "0.0";
 
-	public CourseDetailViewModel(DatabaseService db, NotificationService notifications)
+	public CourseDetailViewModel(DatabaseService db, NotificationService notifications, ApiService apiService, GPAService gpaService)
 	{
 		_db = db;
 		_notifications = notifications;
+		_apiService = apiService;
+		_gpaService = gpaService;
+	}
+
+	partial void OnCurrentGradeChanged(string value)
+	{
+		UpdateGradeDisplay();
+	}
+
+	partial void OnCreditHoursChanged(int value)
+	{
+		UpdateGradeDisplay();
+	}
+
+	private void UpdateGradeDisplay()
+	{
+		if (double.TryParse(CurrentGrade, out var percent) && percent >= 0 && percent <= 100)
+		{
+			LetterGrade = _gpaService.ConvertPercentToLetter(percent);
+			var points = _gpaService.ConvertLetterToPoints(LetterGrade);
+			GradePoints = points.ToString("F1");
+		}
+		else
+		{
+			LetterGrade = string.Empty;
+			GradePoints = "0.0";
+		}
 	}
 
 	public async Task LoadCourseAsync(int courseId)
@@ -70,12 +104,16 @@ public partial class CourseDetailViewModel : ObservableObject
 			SelectedStatus = Course.Status;
 		}
 		Notes = Course.Notes;
+		CreditHours = Course.CreditHours;
+		CurrentGrade = Course.CurrentGrade?.ToString() ?? string.Empty;
+		LetterGrade = Course.LetterGrade ?? string.Empty;
 		var localStart = ConvertUtcToLocal(Course.StartDate);
 		var localEnd = ConvertUtcToLocal(Course.EndDate);
 		StartDate = localStart.Date;
 		StartTime = localStart.TimeOfDay;
 		EndDate = localEnd.Date;
 		EndTime = localEnd.TimeOfDay;
+		UpdateGradeDisplay();
 	}
 
 	public void MapPropertiesToCourse()
@@ -84,6 +122,12 @@ public partial class CourseDetailViewModel : ObservableObject
 		// Convert display name back to enum value
 		Course.Status = GetEnumValueFromDisplayName<CourseStatus>(SelectedStatus).ToString();
 		Course.Notes = Notes;
+		Course.CreditHours = CreditHours;
+		if (double.TryParse(CurrentGrade, out var grade))
+		{
+			Course.CurrentGrade = grade;
+			Course.LetterGrade = _gpaService.ConvertPercentToLetter(grade);
+		}
 		var localStart = CombineDateAndTime(StartDate, StartTime);
 		var localEnd = CombineDateAndTime(EndDate, EndTime);
 		Course.StartDate = ConvertLocalToUtc(localStart);
@@ -223,6 +267,62 @@ public partial class CourseDetailViewModel : ObservableObject
 	private async Task GoBackAsync()
 	{
 		await Shell.Current.GoToAsync("..");
+	}
+
+	[RelayCommand]
+	private async Task SaveGradeAsync()
+	{
+		if (Course == null)
+		{
+			await Application.Current.MainPage.DisplayAlert("Error", "No course selected", "OK");
+			return;
+		}
+
+		if (!double.TryParse(CurrentGrade, out var grade) || grade < 0 || grade > 100)
+		{
+			await Application.Current.MainPage.DisplayAlert("Error", "Please enter a valid grade percentage (0-100)", "OK");
+			return;
+		}
+
+		if (CreditHours <= 0 || CreditHours > 10)
+		{
+			await Application.Current.MainPage.DisplayAlert("Error", "Please enter a valid credit hours (1-10)", "OK");
+			return;
+		}
+
+		try
+		{
+			var letterGrade = _gpaService.ConvertPercentToLetter(grade);
+			var gradeDto = new GradeDTO
+			{
+				CourseId = Course.Id,
+				LetterGrade = letterGrade,
+				Percentage = (decimal)grade,
+				CreditHours = CreditHours
+			};
+
+			var response = await _apiService.SaveGradeAsync(gradeDto);
+			if (response.Success && response.Data != null)
+			{
+				// Update local course
+				Course.CurrentGrade = grade;
+				Course.LetterGrade = letterGrade;
+				Course.CreditHours = CreditHours;
+				await _db.SaveCourseAsync(Course);
+
+				LetterGrade = letterGrade;
+				UpdateGradeDisplay();
+				await Application.Current.MainPage.DisplayAlert("Success", "Grade saved successfully", "OK");
+			}
+			else
+			{
+				await Application.Current.MainPage.DisplayAlert("Error", response.Message ?? "Failed to save grade", "OK");
+			}
+		}
+		catch (Exception ex)
+		{
+			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to save grade: {ex.Message}", "OK");
+		}
 	}
 
 	// Helper methods to read Display attribute from enum values

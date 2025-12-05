@@ -13,6 +13,9 @@ public class CourseDTO
     public string InstructorEmail { get; set; } = string.Empty;
     public string? Notes { get; set; }
     public bool NotificationsEnabled { get; set; } = true;
+    public int CreditHours { get; set; } = 3;
+    public double? CurrentGrade { get; set; }
+    public string? LetterGrade { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

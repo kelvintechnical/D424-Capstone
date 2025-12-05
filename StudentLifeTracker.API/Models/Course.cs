@@ -38,6 +38,14 @@ public class Course : BaseEntity
 
     public bool NotificationsEnabled { get; set; } = true;
 
+    [Range(1, 10)]
+    public int CreditHours { get; set; } = 3;
+
+    public double? CurrentGrade { get; set; }
+
+    [MaxLength(2)]
+    public string? LetterGrade { get; set; }
+
     // Navigation properties
     public Term Term { get; set; } = null!;
     public ICollection<Assessment> Assessments { get; set; } = new List<Assessment>();

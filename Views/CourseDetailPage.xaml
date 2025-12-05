@@ -54,6 +54,38 @@
                 <Button Text="Share Notes" Command="{Binding ShareNotesCommand}" />
             </VerticalStackLayout>
 
+            <!-- Grade Entry Section -->
+            <Frame Padding="16" HasShadow="True" BorderColor="{StaticResource Gray300}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Grade Information" FontAttributes="Bold" FontSize="18" />
+                    
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Credit Hours" />
+                            <Entry Text="{Binding CreditHours}" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Current Grade (%)" />
+                            <Entry Text="{Binding CurrentGrade}" Keyboard="Numeric" Placeholder="0-100" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Letter Grade" />
+                            <Label Text="{Binding LetterGrade}" FontSize="24" FontAttributes="Bold" 
+                                   TextColor="{StaticResource Primary}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="End">
+                            <Label Text="Grade Points" />
+                            <Label Text="{Binding GradePoints}" FontSize="18" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Button Text="Save Grade" Command="{Binding SaveGradeCommand}" />
+                </VerticalStackLayout>
+            </Frame>
+
             <VerticalStackLayout>
                 <Grid ColumnDefinitions="*,Auto">
                     <Label Text="Assessments" />

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="StudentProgressTracker.Views.SearchPage"
+             xmlns:viewmodels="clr-namespace:StudentProgressTracker.ViewModels"
+             xmlns:dtos="clr-namespace:StudentLifeTracker.Shared.DTOs;assembly=StudentLifeTracker.Shared"
+             x:DataType="viewmodels:SearchViewModel"
+             Title="Search">
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <!-- Search Bar -->
+        <Grid Grid.Row="0" Padding="16" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <Entry Text="{Binding SearchQuery}" 
+                   Placeholder="Search courses and terms..."
+                   ReturnCommand="{Binding SearchCommand}"
+                   Grid.Column="0" />
+            <Button Text="Search" 
+                    Command="{Binding SearchCommand}"
+                    Grid.Column="1" />
+        </Grid>
+
+        <!-- Filters -->
+        <Frame Grid.Row="1" Padding="12" HasShadow="False" BorderColor="{StaticResource Gray200}">
+            <VerticalStackLayout Spacing="12">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Search Type" FontSize="14" />
+                        <Picker ItemsSource="{Binding SearchTypeOptions}" 
+                                SelectedItem="{Binding SelectedSearchType}" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="4">
+                        <Label Text="Status" FontSize="14" IsVisible="{Binding SelectedSearchType, Converter={StaticResource SearchTypeToVisibilityConverter}}" />
+                        <Picker ItemsSource="{Binding StatusOptions}" 
+                                SelectedItem="{Binding SelectedStatus}"
+                                IsVisible="{Binding SelectedSearchType, Converter={StaticResource SearchTypeToVisibilityConverter}}" />
+                    </VerticalStackLayout>
+                </Grid>
+            </VerticalStackLayout>
+        </Frame>
+
+        <!-- Clear Button -->
+        <Button Grid.Row="2" 
+                Text="Clear" 
+                Command="{Binding ClearSearchCommand}"
+                IsVisible="{Binding HasSearched}"
+                BackgroundColor="{StaticResource Gray400}"
+                TextColor="{StaticResource White}"
+                Margin="16,8" />
+
+        <!-- Results -->
+        <ScrollView Grid.Row="3">
+            <VerticalStackLayout Padding="16" Spacing="8">
+                <ActivityIndicator IsVisible="{Binding IsSearching}" 
+                                   IsRunning="{Binding IsSearching}" 
+                                   VerticalOptions="Center" />
+
+                <CollectionView ItemsSource="{Binding SearchResults}">
+                    <CollectionView.EmptyView>
+                        <Label Text="No results found" 
+                               TextColor="{StaticResource Gray600}" 
+                               HorizontalTextAlignment="Center" 
+                               Margin="0,24" />
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="dtos:SearchResultDTO">
+                            <Frame Padding="12" Margin="0,4" HasShadow="True" BorderColor="{StaticResource Gray300}">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectResultCommand}"
+                                                          CommandParameter="{Binding .}" />
+                                </Frame.GestureRecognizers>
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                    <!-- Result Type Badge -->
+                                    <Frame Grid.Column="0" 
+                                           Padding="8,4" 
+                                           HasShadow="False"
+                                           BackgroundColor="{Binding ResultType, Converter={StaticResource ResultTypeToColorConverter}}"
+                                           CornerRadius="4">
+                                        <Label Text="{Binding ResultType}" 
+                                               FontSize="12" 
+                                               FontAttributes="Bold"
+                                               TextColor="{StaticResource White}" />
+                                    </Frame>
+
+                                    <!-- Title and Description -->
+                                    <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                        <Label Text="{Binding Title}" 
+                                               FontSize="16" 
+                                               FontAttributes="Bold" />
+                                        <Label Text="{Binding Description}" 
+                                               FontSize="14" 
+                                               TextColor="{StaticResource Gray600}" />
+                                        <Label IsVisible="{Binding ParentTitle, Converter={StaticResource IsStringNotEmptyConverter}}">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="Term: " TextColor="{StaticResource Gray600}" />
+                                                    <Span Text="{Binding ParentTitle}" TextColor="{StaticResource Primary}" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                    </VerticalStackLayout>
+
+                                    <!-- Arrow -->
+                                    <Label Grid.Column="2" 
+                                           Text="→" 
+                                           FontSize="20" 
+                                           VerticalOptions="Center"
+                                           TextColor="{StaticResource Gray400}" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
+

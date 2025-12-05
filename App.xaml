@@ -11,7 +11,9 @@
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <helpers:IsStringNotEmptyConverter x:Key="IsStringNotEmptyConverter" />
-            <helpers:InverseBoolConverter x:Key="InvertedBoolConverter" />
+            <helpers:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <helpers:ResultTypeToColorConverter x:Key="ResultTypeToColorConverter" />
+            <helpers:SearchTypeToVisibilityConverter x:Key="SearchTypeToVisibilityConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -489,6 +489,32 @@ public class ApiService
         return await GetAsync<GradeProjectionDTO>(endpoint);
     }
 
+    public async Task<ApiResponse<List<SearchResultDTO>>> SearchCoursesAsync(string query, string? status = null, int? termId = null)
+    {
+        var endpoint = $"/api/search/courses?query={Uri.EscapeDataString(query)}";
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            endpoint += $"&status={Uri.EscapeDataString(status)}";
+        }
+        if (termId.HasValue)
+        {
+            endpoint += $"&termId={termId.Value}";
+        }
+        return await GetAsync<List<SearchResultDTO>>(endpoint);
+    }
+
+    public async Task<ApiResponse<List<SearchResultDTO>>> SearchTermsAsync(string query)
+    {
+        var endpoint = $"/api/search/terms?query={Uri.EscapeDataString(query)}";
+        return await GetAsync<List<SearchResultDTO>>(endpoint);
+    }
+
+    public async Task<ApiResponse<List<SearchResultDTO>>> SearchAllAsync(string query)
+    {
+        var endpoint = $"/api/search/all?query={Uri.EscapeDataString(query)}";
+        return await GetAsync<List<SearchResultDTO>>(endpoint);
+    }
+
     private async Task EnsureAuthenticatedAsync()
     {
         var token = await GetTokenAsync();

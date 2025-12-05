@@ -25,6 +25,10 @@
             Title="GPA"
             ContentTemplate="{DataTemplate views:GPAPage}"
             Route="GPAPage" />
+        <ShellContent
+            Title="Search"
+            ContentTemplate="{DataTemplate views:SearchPage}"
+            Route="SearchPage" />
     </TabBar>
 
 </Shell>

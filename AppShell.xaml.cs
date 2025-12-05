@@ -31,6 +31,7 @@ public partial class AppShell : Shell
 			Routing.RegisterRoute(nameof(Views.CourseDetailPage), typeof(Views.CourseDetailPage));
 			Routing.RegisterRoute(nameof(Views.AssessmentsPage), typeof(Views.AssessmentsPage));
 			Routing.RegisterRoute(nameof(Views.GPAPage), typeof(Views.GPAPage));
+			Routing.RegisterRoute(nameof(Views.SearchPage), typeof(Views.SearchPage));
 		}
 		catch (Exception ex)
 		{

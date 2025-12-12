@@ -29,7 +29,22 @@
             Title="Search"
             ContentTemplate="{DataTemplate views:SearchPage}"
             Route="SearchPage" />
+        <ShellContent
+            Title="Financial"
+            ContentTemplate="{DataTemplate views:FinancialPage}"
+            Route="FinancialPage" />
     </TabBar>
+
+    <!-- Financial Sub-pages -->
+    <ShellContent
+        ContentTemplate="{DataTemplate views:IncomePage}"
+        Route="IncomePage" />
+    <ShellContent
+        ContentTemplate="{DataTemplate views:ExpensePage}"
+        Route="ExpensePage" />
+    <ShellContent
+        ContentTemplate="{DataTemplate views:CategoryPage}"
+        Route="CategoryPage" />
 
 </Shell>
 

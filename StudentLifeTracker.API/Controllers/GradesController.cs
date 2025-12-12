@@ -150,14 +150,14 @@ public class GradesController : ControllerBase
             var userId = GetUserId();
             if (string.IsNullOrEmpty(userId))
             {
-                return Unauthorized(ApiResponse<GpaResult>.ErrorResponse("User not authenticated."));
+                return Unauthorized(ApiResponse<GpaResultDTO>.ErrorResponse("User not authenticated."));
             }
 
             // Verify term belongs to user
             var term = await _context.Terms.FindAsync(termId);
             if (term == null || term.UserId != userId)
             {
-                return NotFound(ApiResponse<GpaResult>.ErrorResponse("Term not found."));
+                return NotFound(ApiResponse<GpaResultDTO>.ErrorResponse("Term not found."));
             }
 
             var grades = await _context.Grades
@@ -196,7 +196,7 @@ public class GradesController : ControllerBase
             var userId = GetUserId();
             if (string.IsNullOrEmpty(userId))
             {
-                return Unauthorized(ApiResponse<GradeProjectionResult>.ErrorResponse("User not authenticated."));
+                return Unauthorized(ApiResponse<GradeProjectionDTO>.ErrorResponse("User not authenticated."));
             }
 
             // Verify course belongs to user

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="StudentProgressTracker.Views.ExpensePage"
+             xmlns:viewmodels="clr-namespace:StudentProgressTracker.ViewModels"
+             xmlns:dto="clr-namespace:StudentLifeTracker.Shared.DTOs"
+             x:DataType="viewmodels:ExpenseViewModel"
+             Title="Expenses">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="20">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="Expenses" Style="{StaticResource Headline}" />
+                <Button Text="Add" Grid.Column="1" 
+                        Command="{Binding StartNewExpenseCommand}" />
+            </Grid>
+
+            <!-- Edit Form -->
+            <Frame IsVisible="{Binding IsEditing}" Padding="16" HasShadow="True" BorderColor="{StaticResource Primary}">
+                <VerticalStackLayout Spacing="12">
+                    <Label FontSize="18" FontAttributes="Bold">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding SelectedExpense}" Value="{x:Null}">
+                                <Setter Property="Text" Value="New Expense" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Label" Binding="{Binding SelectedExpense}" Value="{x:Null}" Comparison="NotEqual">
+                                <Setter Property="Text" Value="Edit Expense" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                    <Entry Text="{Binding Amount, StringFormat='{0:F2}'}" 
+                           Placeholder="Amount" 
+                           Keyboard="Numeric" />
+                    <Entry Text="{Binding Description}" 
+                           Placeholder="Description" />
+                    <Picker ItemsSource="{Binding Categories}"
+                            SelectedItem="{Binding SelectedCategory}"
+                            ItemDisplayBinding="{Binding Name}"
+                            SelectedIndexChanged="CategoryPicker_SelectedIndexChanged" />
+                    <DatePicker Date="{Binding Date}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Button Text="Save" Grid.Column="0" 
+                                Command="{Binding SaveExpenseCommand}" />
+                        <Button Text="Cancel" Grid.Column="1" 
+                                Command="{Binding CancelEditCommand}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Expense List -->
+            <CollectionView ItemsSource="{Binding Expenses}">
+                <CollectionView.EmptyView>
+                    <Label Text="No expenses recorded yet." 
+                           TextColor="{StaticResource Gray600}" 
+                           HorizontalTextAlignment="Center" 
+                           Margin="0,12" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="dto:ExpenseDTO">
+                        <Frame Padding="12" Margin="0,4" HasShadow="False" BorderColor="{StaticResource Gray200}">
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                <VerticalStackLayout>
+                                    <Label Text="{Binding Description}" FontAttributes="Bold" />
+                                    <Label Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}" 
+                                           FontSize="12" TextColor="{StaticResource Gray600}" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="1" 
+                                       Text="{Binding Amount, StringFormat='${0:F2}'}" 
+                                       FontSize="18" FontAttributes="Bold" 
+                                       TextColor="Red" />
+                                <Button Grid.Column="2" 
+                                        Text="Edit" 
+                                        Clicked="EditExpense_Clicked"
+                                        CommandParameter="{Binding .}" />
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
+

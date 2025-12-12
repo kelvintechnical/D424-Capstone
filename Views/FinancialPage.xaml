@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="StudentProgressTracker.Views.FinancialPage"
+             xmlns:viewmodels="clr-namespace:StudentProgressTracker.ViewModels"
+             xmlns:dto="clr-namespace:StudentLifeTracker.Shared.DTOs"
+             x:DataType="viewmodels:FinancialViewModel"
+             Title="Financial Overview">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="20">
+            <Label Text="Financial Overview" Style="{StaticResource Headline}" />
+
+            <!-- Date Range Selector -->
+            <Frame Padding="12" HasShadow="True">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <VerticalStackLayout>
+                        <Label Text="Start Date" FontSize="12" TextColor="{StaticResource Gray600}" />
+                        <DatePicker Date="{Binding StartDate}" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label Text="End Date" FontSize="12" TextColor="{StaticResource Gray600}" />
+                        <DatePicker Date="{Binding EndDate}" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Frame>
+
+            <!-- Summary Cards -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12" RowDefinitions="Auto,Auto">
+                <Frame Padding="16" HasShadow="True" BorderColor="{StaticResource Primary}" Grid.Column="0" Grid.Row="0">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Total Income" FontSize="14" TextColor="{StaticResource Gray600}" />
+                        <Label Text="{Binding Summary.TotalIncome, StringFormat='${0:F2}'}" 
+                               FontSize="24" FontAttributes="Bold" 
+                               TextColor="{StaticResource Primary}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <Frame Padding="16" HasShadow="True" BorderColor="Red" Grid.Column="1" Grid.Row="0">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Total Expenses" FontSize="14" TextColor="{StaticResource Gray600}" />
+                        <Label Text="{Binding Summary.TotalExpenses, StringFormat='${0:F2}'}" 
+                               FontSize="24" FontAttributes="Bold" 
+                               TextColor="Red" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <Frame Padding="16" HasShadow="True" 
+                       Grid.ColumnSpan="2" Grid.Row="1" Margin="0,12,0,0">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Net Amount" FontSize="14" TextColor="{StaticResource Gray600}" />
+                        <Label Text="{Binding Summary.NetAmount, StringFormat='${0:F2}'}" 
+                               FontSize="32" FontAttributes="Bold">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label" Binding="{Binding Summary.NetAmount}" Value="{x:Null}">
+                                    <Setter Property="TextColor" Value="Black" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Label" Binding="{Binding Summary.NetAmount}" Comparison="GreaterThan" Value="0">
+                                    <Setter Property="TextColor" Value="Green" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Label" Binding="{Binding Summary.NetAmount}" Comparison="LessThan" Value="0">
+                                    <Setter Property="TextColor" Value="Red" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                    </VerticalStackLayout>
+                </Frame>
+            </Grid>
+
+            <!-- Recent Incomes -->
+            <VerticalStackLayout Spacing="12">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Recent Income" FontSize="18" FontAttributes="Bold" />
+                    <Button Text="View All" Grid.Column="1" 
+                            Clicked="NavigateToIncome_Clicked" />
+                </Grid>
+                <CollectionView ItemsSource="{Binding RecentIncomes}">
+                    <CollectionView.EmptyView>
+                        <Label Text="No income recorded yet." 
+                               TextColor="{StaticResource Gray600}" 
+                               HorizontalTextAlignment="Center" 
+                               Margin="0,12" />
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="dto:IncomeDTO">
+                            <Frame Padding="12" Margin="0,4" HasShadow="False" BorderColor="{StaticResource Gray200}">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding Source}" FontAttributes="Bold" />
+                                        <Label Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}" 
+                                               FontSize="12" TextColor="{StaticResource Gray600}" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1" 
+                                           Text="{Binding Amount, StringFormat='${0:F2}'}" 
+                                           FontSize="18" FontAttributes="Bold" 
+                                           TextColor="{StaticResource Primary}" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!-- Recent Expenses -->
+            <VerticalStackLayout Spacing="12">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Recent Expenses" FontSize="18" FontAttributes="Bold" />
+                    <Button Text="View All" Grid.Column="1" 
+                            Clicked="NavigateToExpense_Clicked" />
+                </Grid>
+                <CollectionView ItemsSource="{Binding RecentExpenses}">
+                    <CollectionView.EmptyView>
+                        <Label Text="No expenses recorded yet." 
+                               TextColor="{StaticResource Gray600}" 
+                               HorizontalTextAlignment="Center" 
+                               Margin="0,12" />
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="dto:ExpenseDTO">
+                            <Frame Padding="12" Margin="0,4" HasShadow="False" BorderColor="{StaticResource Gray200}">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding Description}" FontAttributes="Bold" />
+                                        <Label Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}" 
+                                               FontSize="12" TextColor="{StaticResource Gray600}" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1" 
+                                           Text="{Binding Amount, StringFormat='${0:F2}'}" 
+                                           FontSize="18" FontAttributes="Bold" 
+                                           TextColor="Red" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
+

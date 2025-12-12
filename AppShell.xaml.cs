@@ -32,6 +32,10 @@ public partial class AppShell : Shell
 			Routing.RegisterRoute(nameof(Views.AssessmentsPage), typeof(Views.AssessmentsPage));
 			Routing.RegisterRoute(nameof(Views.GPAPage), typeof(Views.GPAPage));
 			Routing.RegisterRoute(nameof(Views.SearchPage), typeof(Views.SearchPage));
+			Routing.RegisterRoute(nameof(Views.FinancialPage), typeof(Views.FinancialPage));
+			Routing.RegisterRoute(nameof(Views.IncomePage), typeof(Views.IncomePage));
+			Routing.RegisterRoute(nameof(Views.ExpensePage), typeof(Views.ExpensePage));
+			Routing.RegisterRoute(nameof(Views.CategoryPage), typeof(Views.CategoryPage));
 		}
 		catch (Exception ex)
 		{

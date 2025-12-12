@@ -53,6 +53,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<Services.ApiService>();
 		builder.Services.AddSingleton<Services.GPAService>();
 		builder.Services.AddSingleton<Services.SearchService>();
+		builder.Services.AddSingleton<Services.FinancialService>();
 
 		// ViewModels
 		builder.Services.AddTransient<ViewModels.LoginViewModel>();
@@ -64,6 +65,10 @@ public static class MauiProgram
 		builder.Services.AddSingleton<AssessmentViewModel>();
 		builder.Services.AddSingleton<GPAViewModel>();
 		builder.Services.AddSingleton<SearchViewModel>();
+		builder.Services.AddSingleton<FinancialViewModel>();
+		builder.Services.AddSingleton<IncomeViewModel>();
+		builder.Services.AddSingleton<ExpenseViewModel>();
+		builder.Services.AddSingleton<CategoryViewModel>();
         builder.Services.AddSingleton<IAlertService, AlertService>();
 
 		// Suppress CA1416 warnings - Build() and Services are supported on our target platforms

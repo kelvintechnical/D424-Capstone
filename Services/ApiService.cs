@@ -515,6 +515,88 @@ public class ApiService
         return await GetAsync<List<SearchResultDTO>>(endpoint);
     }
 
+    public async Task<ApiResponse<GpaReportDTO>> GetGpaReportAsync(int termId)
+    {
+        return await GetAsync<GpaReportDTO>($"/api/reports/gpa/{termId}");
+    }
+
+    public async Task<byte[]?> DownloadGpaReportCsvAsync(int termId)
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+
+            var endpoint = $"/api/reports/gpa/{termId}/csv";
+            var response = await _httpClient.GetAsync(endpoint);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsByteArrayAsync();
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                var refreshResult = await RefreshTokenAsync();
+                if (refreshResult.Success)
+                {
+                    return await DownloadGpaReportCsvAsync(termId);
+                }
+                throw new UnauthorizedAccessException("Unauthorized. Please login again.");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"CSV download error: {response.StatusCode} - {errorContent}");
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"CSV download error: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task<ApiResponse<TranscriptReportDTO>> GetTranscriptReportAsync()
+    {
+        return await GetAsync<TranscriptReportDTO>("/api/reports/transcript");
+    }
+
+    public async Task<byte[]?> DownloadTranscriptCsvAsync()
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+
+            var endpoint = "/api/reports/transcript/csv";
+            var response = await _httpClient.GetAsync(endpoint);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsByteArrayAsync();
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                var refreshResult = await RefreshTokenAsync();
+                if (refreshResult.Success)
+                {
+                    return await DownloadTranscriptCsvAsync();
+                }
+                throw new UnauthorizedAccessException("Unauthorized. Please login again.");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"CSV download error: {response.StatusCode} - {errorContent}");
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"CSV download error: {ex.Message}");
+            return null;
+        }
+    }
+
     private async Task EnsureAuthenticatedAsync()
     {
         var token = await GetTokenAsync();
@@ -528,4 +610,121 @@ public class ApiService
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
     }
+
+    #region Financial Tracking Methods
+
+    // Income Methods
+    public async Task<ApiResponse<List<IncomeDTO>>> GetIncomesAsync(DateTime? startDate = null, DateTime? endDate = null)
+    {
+        var endpoint = "/api/financial/income";
+        if (startDate.HasValue || endDate.HasValue)
+        {
+            var queryParams = new List<string>();
+            if (startDate.HasValue)
+                queryParams.Add($"startDate={startDate.Value:yyyy-MM-dd}");
+            if (endDate.HasValue)
+                queryParams.Add($"endDate={endDate.Value:yyyy-MM-dd}");
+            if (queryParams.Any())
+                endpoint += "?" + string.Join("&", queryParams);
+        }
+        return await GetAsync<List<IncomeDTO>>(endpoint);
+    }
+
+    public async Task<ApiResponse<IncomeDTO>> GetIncomeAsync(int id)
+    {
+        return await GetAsync<IncomeDTO>($"/api/financial/income/{id}");
+    }
+
+    public async Task<ApiResponse<IncomeDTO>> CreateIncomeAsync(IncomeDTO income)
+    {
+        return await PostAsync<IncomeDTO>("/api/financial/income", income);
+    }
+
+    public async Task<ApiResponse<IncomeDTO>> UpdateIncomeAsync(int id, IncomeDTO income)
+    {
+        return await PutAsync<IncomeDTO>($"/api/financial/income/{id}", income);
+    }
+
+    public async Task<ApiResponse<bool>> DeleteIncomeAsync(int id)
+    {
+        return await DeleteAsync<bool>($"/api/financial/income/{id}");
+    }
+
+    // Expense Methods
+    public async Task<ApiResponse<List<ExpenseDTO>>> GetExpensesAsync(DateTime? startDate = null, DateTime? endDate = null, int? categoryId = null)
+    {
+        var endpoint = "/api/financial/expense";
+        var queryParams = new List<string>();
+        if (startDate.HasValue)
+            queryParams.Add($"startDate={startDate.Value:yyyy-MM-dd}");
+        if (endDate.HasValue)
+            queryParams.Add($"endDate={endDate.Value:yyyy-MM-dd}");
+        if (categoryId.HasValue)
+            queryParams.Add($"categoryId={categoryId.Value}");
+        if (queryParams.Any())
+            endpoint += "?" + string.Join("&", queryParams);
+        return await GetAsync<List<ExpenseDTO>>(endpoint);
+    }
+
+    public async Task<ApiResponse<ExpenseDTO>> GetExpenseAsync(int id)
+    {
+        return await GetAsync<ExpenseDTO>($"/api/financial/expense/{id}");
+    }
+
+    public async Task<ApiResponse<ExpenseDTO>> CreateExpenseAsync(ExpenseDTO expense)
+    {
+        return await PostAsync<ExpenseDTO>("/api/financial/expense", expense);
+    }
+
+    public async Task<ApiResponse<ExpenseDTO>> UpdateExpenseAsync(int id, ExpenseDTO expense)
+    {
+        return await PutAsync<ExpenseDTO>($"/api/financial/expense/{id}", expense);
+    }
+
+    public async Task<ApiResponse<bool>> DeleteExpenseAsync(int id)
+    {
+        return await DeleteAsync<bool>($"/api/financial/expense/{id}");
+    }
+
+    // Category Methods
+    public async Task<ApiResponse<List<CategoryDTO>>> GetCategoriesAsync()
+    {
+        return await GetAsync<List<CategoryDTO>>("/api/financial/category");
+    }
+
+    public async Task<ApiResponse<CategoryDTO>> GetCategoryAsync(int id)
+    {
+        return await GetAsync<CategoryDTO>($"/api/financial/category/{id}");
+    }
+
+    public async Task<ApiResponse<CategoryDTO>> CreateCategoryAsync(CategoryDTO category)
+    {
+        return await PostAsync<CategoryDTO>("/api/financial/category", category);
+    }
+
+    public async Task<ApiResponse<CategoryDTO>> UpdateCategoryAsync(int id, CategoryDTO category)
+    {
+        return await PutAsync<CategoryDTO>($"/api/financial/category/{id}", category);
+    }
+
+    public async Task<ApiResponse<bool>> DeleteCategoryAsync(int id)
+    {
+        return await DeleteAsync<bool>($"/api/financial/category/{id}");
+    }
+
+    // Summary Method
+    public async Task<ApiResponse<FinancialSummaryDTO>> GetFinancialSummaryAsync(DateTime? startDate = null, DateTime? endDate = null)
+    {
+        var endpoint = "/api/financial/summary";
+        var queryParams = new List<string>();
+        if (startDate.HasValue)
+            queryParams.Add($"startDate={startDate.Value:yyyy-MM-dd}");
+        if (endDate.HasValue)
+            queryParams.Add($"endDate={endDate.Value:yyyy-MM-dd}");
+        if (queryParams.Any())
+            endpoint += "?" + string.Join("&", queryParams);
+        return await GetAsync<FinancialSummaryDTO>(endpoint);
+    }
+
+    #endregion
 }

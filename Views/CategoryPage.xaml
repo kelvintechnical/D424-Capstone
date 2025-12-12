@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="StudentProgressTracker.Views.CategoryPage"
+             xmlns:viewmodels="clr-namespace:StudentProgressTracker.ViewModels"
+             xmlns:dto="clr-namespace:StudentLifeTracker.Shared.DTOs"
+             x:DataType="viewmodels:CategoryViewModel"
+             Title="Categories">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="20">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="Expense Categories" Style="{StaticResource Headline}" />
+                <Button Text="Add" Grid.Column="1" 
+                        Command="{Binding StartNewCategoryCommand}" />
+            </Grid>
+
+            <!-- Edit Form -->
+            <Frame IsVisible="{Binding IsEditing}" Padding="16" HasShadow="True" BorderColor="{StaticResource Primary}">
+                <VerticalStackLayout Spacing="12">
+                    <Label FontSize="18" FontAttributes="Bold">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding SelectedCategory}" Value="{x:Null}">
+                                <Setter Property="Text" Value="New Category" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Label" Binding="{Binding SelectedCategory}" Value="{x:Null}" Comparison="NotEqual">
+                                <Setter Property="Text" Value="Edit Category" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                    <Entry Text="{Binding Name}" 
+                           Placeholder="Category Name" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Button Text="Save" Grid.Column="0" 
+                                Command="{Binding SaveCategoryCommand}" />
+                        <Button Text="Cancel" Grid.Column="1" 
+                                Command="{Binding CancelEditCommand}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Category List -->
+            <CollectionView ItemsSource="{Binding Categories}">
+                <CollectionView.EmptyView>
+                    <Label Text="No categories yet. Create one to get started." 
+                           TextColor="{StaticResource Gray600}" 
+                           HorizontalTextAlignment="Center" 
+                           Margin="0,12" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="dto:CategoryDTO">
+                        <Frame Padding="12" Margin="0,4" HasShadow="False" BorderColor="{StaticResource Gray200}">
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                <Label Text="{Binding Name}" 
+                                       FontAttributes="Bold" 
+                                       VerticalOptions="Center" />
+                                <Button Grid.Column="1" 
+                                        Text="Edit" 
+                                        Clicked="EditCategory_Clicked"
+                                        CommandParameter="{Binding .}" />
+                                <Button Grid.Column="2" 
+                                        Text="Delete" 
+                                        Clicked="DeleteCategory_Clicked"
+                                        CommandParameter="{Binding .}" />
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
+

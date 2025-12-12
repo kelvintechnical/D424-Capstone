@@ -95,6 +95,7 @@ builder.Services.AddAuthentication(options =>
 
 // Register application services
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<ReportService>();
 
 // CORS configuration
 builder.Services.AddCors(options =>

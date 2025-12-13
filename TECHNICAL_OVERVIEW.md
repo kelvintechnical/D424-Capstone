@@ -321,6 +321,33 @@ The application follows a **3-tier client-server architecture**:
 - `GET /transcript` - Get full transcript (JSON)
 - `GET /transcript/csv` - Download transcript (CSV)
 
+### Financial (`/api/financial`)
+
+#### Income Endpoints
+- `GET /income` - Get all incomes (optional: startDate, endDate query parameters)
+- `GET /income/{id}` - Get income by ID
+- `POST /income` - Create new income
+- `PUT /income/{id}` - Update income
+- `DELETE /income/{id}` - Delete income
+
+#### Expense Endpoints
+- `GET /expense` - Get all expenses (optional: startDate, endDate, categoryId query parameters)
+- `GET /expense/{id}` - Get expense by ID
+- `POST /expense` - Create new expense
+- `PUT /expense/{id}` - Update expense
+- `DELETE /expense/{id}` - Delete expense
+
+#### Category Endpoints
+- `GET /category` - Get all categories
+- `GET /category/{id}` - Get category by ID
+- `POST /category` - Create new category
+- `PUT /category/{id}` - Update category
+- `DELETE /category/{id}` - Delete category (restricted if expenses exist)
+
+#### Summary Endpoint
+- `GET /summary` - Get financial summary (optional: startDate, endDate query parameters)
+  - Returns: TotalIncome, TotalExpenses, NetAmount, IncomeCount, ExpenseCount
+
 **API Features**
 - JWT authorization on all endpoints (except authentication endpoints)
 - User-specific data filtering (users can only access their own data)
@@ -558,6 +585,7 @@ Based on file modification history:
 - ✅ GPA calculation with grade projections
 - ✅ Advanced search functionality
 - ✅ Report generation with CSV export
+- ✅ Financial tracking (income, expenses, categories)
 - ✅ Offline-first with cloud sync capability
 - ✅ Secure JWT-based API
 - ✅ Modern MVVM architecture
@@ -568,13 +596,17 @@ Based on file modification history:
 
 Based on the existing architecture, potential enhancements include:
 
-### 1. Financial Tracking (Partially Implemented)
-The database schema already includes Income, Expense, and Category tables:
-- Complete income tracking UI
-- Expense tracking with category management
-- Budget planning and alerts
-- Financial reports and analytics
-- Income vs. expense visualizations
+### 1. Financial Tracking ✅ Complete
+The financial tracking feature is fully implemented with:
+- ✅ Complete income tracking UI and API
+- ✅ Expense tracking with category management
+- ✅ Category management (CRUD operations)
+- ✅ Financial summary with date range filtering
+- ⏳ Future enhancements could include:
+  - Budget planning and alerts
+  - Advanced financial reports and analytics
+  - Income vs. expense visualizations and charts
+  - Recurring income/expense templates
 
 ### 2. Enhanced Cloud Synchronization
 - Automatic background sync
@@ -866,6 +898,8 @@ This document provides a comprehensive technical overview suitable for due dilig
 *Document Version: 1.0*  
 *Last Updated: December 12, 2025*  
 *Created for: Potential purchaser technical evaluation*
+
+
 
 
 

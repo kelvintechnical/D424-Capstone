@@ -8,6 +8,7 @@ namespace StudentProgressTracker.Services;
 public class ApiService
 {
     private readonly HttpClient _httpClient;
+    // TODO: Move to configuration (appsettings.json or Preferences) for production
     private readonly string _baseUrl = "https://localhost:7119";
     private const string TokenKey = "auth_token";
     private const string RefreshTokenKey = "refresh_token";

@@ -32,3 +32,5 @@ public partial class FinancialPage : ContentPage
 
 
 
+
+

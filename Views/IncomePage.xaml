@@ -17,8 +17,7 @@
             <!-- Edit Form -->
             <Frame IsVisible="{Binding IsEditing}" Padding="16" HasShadow="True" BorderColor="{StaticResource Primary}">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="{Binding SelectedIncome, StringFormat='{0}'}" 
-                           FontSize="18" FontAttributes="Bold">
+                    <Label FontSize="18" FontAttributes="Bold" Text="Edit Income">
                         <Label.Triggers>
                             <DataTrigger TargetType="Label" Binding="{Binding SelectedIncome}" Value="{x:Null}">
                                 <Setter Property="Text" Value="New Income" />

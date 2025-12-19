@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="StudentProgressTracker.Views.IncomePage"
              xmlns:viewmodels="clr-namespace:StudentProgressTracker.ViewModels"
-             xmlns:dto="clr-namespace:StudentLifeTracker.Shared.DTOs"
+             xmlns:dto="clr-namespace:StudentLifeTracker.Shared.DTOs;assembly=StudentLifeTracker.Shared"
              x:DataType="viewmodels:IncomeViewModel"
              Title="Income">
     <ScrollView>

@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="StudentProgressTracker.Views.CategoryPage"
              xmlns:viewmodels="clr-namespace:StudentProgressTracker.ViewModels"
-             xmlns:dto="clr-namespace:StudentLifeTracker.Shared.DTOs"
+             xmlns:dto="clr-namespace:StudentLifeTracker.Shared.DTOs;assembly=StudentLifeTracker.Shared"
              x:DataType="viewmodels:CategoryViewModel"
              Title="Categories">
     <ScrollView>
@@ -17,13 +17,10 @@
             <!-- Edit Form -->
             <Frame IsVisible="{Binding IsEditing}" Padding="16" HasShadow="True" BorderColor="{StaticResource Primary}">
                 <VerticalStackLayout Spacing="12">
-                    <Label FontSize="18" FontAttributes="Bold">
+                    <Label FontSize="18" FontAttributes="Bold" Text="Edit Category">
                         <Label.Triggers>
                             <DataTrigger TargetType="Label" Binding="{Binding SelectedCategory}" Value="{x:Null}">
                                 <Setter Property="Text" Value="New Category" />
-                            </DataTrigger>
-                            <DataTrigger TargetType="Label" Binding="{Binding SelectedCategory}" Value="{x:Null}" Comparison="NotEqual">
-                                <Setter Property="Text" Value="Edit Category" />
                             </DataTrigger>
                         </Label.Triggers>
                     </Label>

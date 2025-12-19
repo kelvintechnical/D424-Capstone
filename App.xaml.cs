@@ -1,3 +1,5 @@
+using StudentProgressTracker.Helpers;
+
 namespace StudentProgressTracker;
 
 public partial class App : Application

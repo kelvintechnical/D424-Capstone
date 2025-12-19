@@ -77,6 +77,16 @@
 	  <ProjectReference Include="StudentLifeTracker.Shared\StudentLifeTracker.Shared.csproj" />
 	</ItemGroup>
 
+	<!-- Exclude files from other projects to prevent cross-contamination -->
+	<ItemGroup>
+		<Compile Remove="StudentLifeTracker.API\**" />
+		<Compile Remove="StudentLifeTracker.Shared\**" />
+		<Compile Remove="StudentProgressTracker.Tests\**" />
+		<None Remove="StudentLifeTracker.API\**" />
+		<None Remove="StudentLifeTracker.Shared\**" />
+		<None Remove="StudentProgressTracker.Tests\**" />
+	</ItemGroup>
+
 
 	<!-- Exclude conflicting AndroidX Collection.Ktx package early in the build -->
 	<Target Name="ExcludeConflictingAndroidXPackages" BeforeTargets="_ResolveLibraryProjectImports">

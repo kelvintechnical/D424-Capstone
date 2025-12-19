@@ -85,7 +85,7 @@ public partial class RegisterViewModel : ObservableObject
 
             if (response.Success && response.Data != null)
             {
-                await _alertService.ShowAlertAsync("Success", "Registration successful! You can now login.");
+                await _alertService.ShowAlertAsync("Success", "Registration successful! You can now login.", "OK");
                 await Shell.Current.GoToAsync("//LoginPage");
             }
             else

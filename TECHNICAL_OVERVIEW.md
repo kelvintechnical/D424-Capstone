@@ -46,7 +46,8 @@ The application follows a **3-tier client-server architecture**:
 **Framework & Runtime**
 - .NET 9.0 SDK (latest stable)
 - .NET MAUI (Multi-platform App UI)
-- Target Platforms: Android 5.0+, Windows 10+, iOS, macOS
+- Current Target Platform: Windows 10+ (version 10.0.19041.0+) - Primary development platform
+- Supported Platforms (configurable): Android 5.0+, iOS, macOS
 
 **Key NuGet Packages**
 - `Microsoft.Maui.Controls` 9.0.0 - UI framework
@@ -757,8 +758,10 @@ All dependencies use permissive open-source licenses:
 
 ### 10. Active & Modern Development
 - Recent development (Nov-Dec 2025)
-- Latest framework versions
+- Latest framework versions (.NET 9.0, MAUI 9.0)
 - Clean, well-organized codebase
+- Recent bug fixes (XAML binding errors, resource name mismatches)
+- Streamlined Windows development configuration
 - Ready for immediate deployment
 
 ---
@@ -896,7 +899,7 @@ This document provides a comprehensive technical overview suitable for due dilig
 ---
 
 *Document Version: 1.0*  
-*Last Updated: December 12, 2025*  
+*Last Updated: December 19, 2025*  
 *Created for: Potential purchaser technical evaluation*
 
 

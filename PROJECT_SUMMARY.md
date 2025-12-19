@@ -211,9 +211,10 @@ A unified, cross-platform application that consolidates all academic and financi
 **Framework & Runtime**
 - **.NET 9.0 SDK** - Latest stable version
 - **.NET MAUI (Multi-platform App UI)** - Cross-platform framework
-- **Target Platforms:**
+- **Current Target Platform:**
+  - Windows 10+ (version 10.0.19041.0+) - Primary development platform
+- **Supported Platforms (configurable):**
   - Android 5.0+ (API Level 21+)
-  - Windows 10+ (version 10.0.19041.0+)
   - iOS 13.0+
   - macOS 10.15+
 
@@ -314,9 +315,9 @@ A unified, cross-platform application that consolidates all academic and financi
 - MSBuild for compilation
 - NuGet package management
 - Platform-specific build tools:
-  - Android SDK and build tools
-  - Windows SDK
-  - Xcode (for iOS/macOS)
+  - Windows SDK 10.0.19041.0+ (required for current build)
+  - Android SDK and build tools (optional, for Android builds)
+  - Xcode (optional, for iOS/macOS builds - Mac required)
 
 ---
 
@@ -412,10 +413,17 @@ A unified, cross-platform application that consolidates all academic and financi
 - Financial tracking
 - CSV export capabilities
 
-**Phase 4: Testing & Documentation (Current)**
+**Phase 4: Testing & Documentation**
 - Unit test suite
 - Documentation completion
 - Code cleanup and optimization
+
+**Phase 5: Recent Updates (December 2025)**
+- Fixed XAML compiled binding errors (IncomePage)
+- Fixed XAML resource converter name mismatches (InvertedBoolConverter → InverseBoolConverter)
+- Simplified project configuration to Windows-only for streamlined development
+- Enhanced error logging and window activation handling
+- Resolved project cross-contamination issues with proper MSBuild exclusions
 
 ---
 
@@ -474,7 +482,12 @@ All dependencies use permissive open-source licenses:
 
 **Current Version:** 1.0  
 **Status:** ✅ **Production-Ready**  
-**Last Updated:** December 2025
+**Last Updated:** December 19, 2025
+
+**Recent Changes:**
+- Fixed XAML binding and resource errors
+- Simplified project configuration for Windows development
+- Enhanced error handling and logging
 
 The application is feature-complete, well-tested, and ready for deployment. All core functionality has been implemented, tested, and documented.
 

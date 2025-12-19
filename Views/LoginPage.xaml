@@ -26,7 +26,7 @@
                 <Entry Text="{Binding Email}" 
                        Placeholder="Enter your email"
                        Keyboard="Email"
-                       IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
+                       IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}" />
             </VerticalStackLayout>
 
             <!-- Password Entry -->
@@ -35,7 +35,7 @@
                 <Entry Text="{Binding Password}" 
                        Placeholder="Enter your password"
                        IsPassword="True"
-                       IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
+                       IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}" />
             </VerticalStackLayout>
 
             <!-- Error Message -->
@@ -47,7 +47,7 @@
             <!-- Login Button -->
             <Button Text="Login" 
                     Command="{Binding LoginCommand}"
-                    IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"
+                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
                     BackgroundColor="#512BD4"
                     TextColor="White"
                     CornerRadius="5"

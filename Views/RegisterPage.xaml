@@ -20,7 +20,7 @@
                 <Label Text="Name" FontSize="14" />
                 <Entry Text="{Binding Name}" 
                        Placeholder="Enter your name"
-                       IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
+                       IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}" />
             </VerticalStackLayout>
 
             <!-- Email Entry -->
@@ -29,7 +29,7 @@
                 <Entry Text="{Binding Email}" 
                        Placeholder="Enter your email"
                        Keyboard="Email"
-                       IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
+                       IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}" />
             </VerticalStackLayout>
 
             <!-- Password Entry -->
@@ -38,7 +38,7 @@
                 <Entry Text="{Binding Password}" 
                        Placeholder="Enter password (min 6 characters)"
                        IsPassword="True"
-                       IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
+                       IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}" />
             </VerticalStackLayout>
 
             <!-- Confirm Password Entry -->
@@ -47,7 +47,7 @@
                 <Entry Text="{Binding ConfirmPassword}" 
                        Placeholder="Confirm your password"
                        IsPassword="True"
-                       IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
+                       IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}" />
             </VerticalStackLayout>
 
             <!-- Error Message -->
@@ -59,7 +59,7 @@
             <!-- Register Button -->
             <Button Text="Register" 
                     Command="{Binding RegisterCommand}"
-                    IsEnabled="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}"
+                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
                     BackgroundColor="#512BD4"
                     TextColor="White"
                     CornerRadius="5"

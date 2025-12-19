@@ -31,6 +31,14 @@ public partial class App : Application
 			var shell = new AppShell();
 			var window = new Window(shell) { Title = "StudentProgressTracker" };
 			
+			// Make window visible and activate it
+			window.Activated += (s, e) =>
+			{
+#if DEBUG
+				System.Diagnostics.Debug.WriteLine("[App] Window activated");
+#endif
+			};
+			
 			// Check authentication on window creation
 			_ = Task.Run(async () => await CheckAuthenticationAsync());
 			
@@ -40,6 +48,13 @@ public partial class App : Application
 		{
 			System.Diagnostics.Debug.WriteLine($"[App] CreateWindow failed: {ex.Message}");
 			System.Diagnostics.Debug.WriteLine($"[App] Stack trace: {ex.StackTrace}");
+			// Log to file for debugging
+			try
+			{
+				var logPath = Path.Combine(FileSystem.AppDataDirectory, "error.log");
+				File.WriteAllText(logPath, $"{DateTime.Now}: CreateWindow failed: {ex.Message}\n{ex.StackTrace}");
+			}
+			catch { }
 			throw;
 		}
 	}

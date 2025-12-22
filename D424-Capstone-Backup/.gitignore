@@ -1,0 +1,16 @@
+﻿# Build output
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.csproj.user
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db

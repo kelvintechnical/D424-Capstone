@@ -38,24 +38,53 @@ public class GradesController : ControllerBase
                 return Unauthorized(ApiResponse<GradeDTO>.ErrorResponse("User not authenticated."));
             }
 
-            // Verify course belongs to user
+            // Validate input
+            if (gradeDto == null)
+            {
+                return BadRequest(ApiResponse<GradeDTO>.ErrorResponse("Grade data is required."));
+            }
+
+            if (gradeDto.CourseId <= 0)
+            {
+                return BadRequest(ApiResponse<GradeDTO>.ErrorResponse("Invalid course ID."));
+            }
+
+            if (string.IsNullOrWhiteSpace(gradeDto.LetterGrade))
+            {
+                return BadRequest(ApiResponse<GradeDTO>.ErrorResponse("Letter grade is required."));
+            }
+
+            if (gradeDto.CreditHours <= 0 || gradeDto.CreditHours > 10)
+            {
+                return BadRequest(ApiResponse<GradeDTO>.ErrorResponse("Credit hours must be between 1 and 10."));
+            }
+
+            // Verify course belongs to user - improved query to avoid navigation property issues
             var course = await _context.Courses
                 .Include(c => c.Term)
-                .FirstOrDefaultAsync(c => c.Id == gradeDto.CourseId && c.Term.UserId == userId);
+                .Where(c => c.Id == gradeDto.CourseId)
+                .FirstOrDefaultAsync();
 
             if (course == null)
             {
                 return NotFound(ApiResponse<GradeDTO>.ErrorResponse("Course not found."));
             }
 
+            if (course.Term == null || course.Term.UserId != userId)
+            {
+                return StatusCode(403, ApiResponse<GradeDTO>.ErrorResponse("You do not have permission to modify this course."));
+            }
+
             Grade grade;
             if (gradeDto.Id > 0)
             {
-                // Update existing grade
-                grade = await _context.Grades.FindAsync(gradeDto.Id);
+                // Update existing grade - verify it belongs to the course
+                grade = await _context.Grades
+                    .FirstOrDefaultAsync(g => g.Id == gradeDto.Id && g.CourseId == gradeDto.CourseId);
+
                 if (grade == null)
                 {
-                    return NotFound(ApiResponse<GradeDTO>.ErrorResponse("Grade not found."));
+                    return NotFound(ApiResponse<GradeDTO>.ErrorResponse("Grade not found or does not belong to this course."));
                 }
 
                 grade.LetterGrade = gradeDto.LetterGrade;
@@ -93,10 +122,31 @@ public class GradesController : ControllerBase
 
             return Ok(ApiResponse<GradeDTO>.SuccessResponse(result, "Grade saved successfully"));
         }
+        catch (DbUpdateException dbEx)
+        {
+            _logger.LogError(dbEx, "Database error saving grade");
+            var errorMessage = "An error occurred while saving the grade to the database.";
+            
+            // Check for specific database errors
+            if (dbEx.InnerException != null)
+            {
+                var innerMessage = dbEx.InnerException.Message.ToLower();
+                if (innerMessage.Contains("foreign key") || innerMessage.Contains("constraint"))
+                {
+                    errorMessage = "The course associated with this grade could not be found.";
+                }
+                else if (innerMessage.Contains("duplicate") || innerMessage.Contains("unique"))
+                {
+                    errorMessage = "A grade with these details already exists.";
+                }
+            }
+            
+            return StatusCode(500, ApiResponse<GradeDTO>.ErrorResponse(errorMessage));
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error saving grade");
-            return StatusCode(500, ApiResponse<GradeDTO>.ErrorResponse("An error occurred while saving the grade."));
+            _logger.LogError(ex, "Error saving grade: {Message}", ex.Message);
+            return StatusCode(500, ApiResponse<GradeDTO>.ErrorResponse($"An error occurred while saving the grade: {ex.Message}"));
         }
     }
 

@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using StudentLifeTracker.API.Data;
 using StudentLifeTracker.API.Models;
 using StudentLifeTracker.API.Services;
+using System.Data.Common;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -124,19 +125,66 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Ensure database is created (for development only)
+// Ensure database is created and schema is up to date (for development only)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        
         context.Database.EnsureCreated();
+        
+        // Add missing columns to Courses table if they don't exist
+        EnsureCourseColumnsExist(context, logger);
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred creating the database.");
+        logger.LogError(ex, "An error occurred creating/updating the database.");
+    }
+}
+
+// Helper method to ensure Course table has required columns
+static void EnsureCourseColumnsExist(ApplicationDbContext context, ILogger logger)
+{
+    try
+    {
+        using var connection = context.Database.GetDbConnection();
+        connection.Open();
+        using var command = connection.CreateCommand();
+        
+        // Check and add CreditHours column
+        command.CommandText = @"
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Courses') AND name = 'CreditHours')
+            BEGIN
+                ALTER TABLE Courses ADD CreditHours INT NOT NULL DEFAULT 3;
+            END";
+        command.ExecuteNonQuery();
+        
+        // Check and add CurrentGrade column
+        command.CommandText = @"
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Courses') AND name = 'CurrentGrade')
+            BEGIN
+                ALTER TABLE Courses ADD CurrentGrade FLOAT NULL;
+            END";
+        command.ExecuteNonQuery();
+        
+        // Check and add LetterGrade column
+        command.CommandText = @"
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Courses') AND name = 'LetterGrade')
+            BEGIN
+                ALTER TABLE Courses ADD LetterGrade NVARCHAR(2) NULL;
+            END";
+        command.ExecuteNonQuery();
+        
+        logger.LogInformation("Course table columns verified/updated successfully");
+    }
+    catch (Exception ex)
+    {
+        // Log but don't throw - allows app to start even if column addition fails
+        logger.LogWarning(ex, "Could not ensure Course columns exist. You may need to run the SQL script manually.");
     }
 }
 

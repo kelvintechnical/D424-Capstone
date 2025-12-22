@@ -18,7 +18,8 @@ public class ApiService
     {
         _httpClient = new HttpClient
         {
-            BaseAddress = new Uri(_baseUrl),
+            //BaseAddress = new Uri(_baseUrl),
+            BaseAddress = new Uri("http://localhost:5052/"),
             Timeout = TimeSpan.FromSeconds(30)
         };
 

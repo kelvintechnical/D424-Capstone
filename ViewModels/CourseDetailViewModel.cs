@@ -164,8 +164,12 @@ public partial class CourseDetailViewModel : ObservableObject
 			await _db.SaveInstructorAsync(Instructor);
 			Course.InstructorId = Instructor.Id;
 			
-			// Save locally first
-			await _db.SaveCourseAsync(Course);
+			// Save locally first - capture the returned ID for new courses
+			var savedId = await _db.SaveCourseAsync(Course);
+			if (Course.Id == 0 && savedId > 0)
+			{
+				Course.Id = savedId;
+			}
 
 			// Sync to API if authenticated
 			if (await _apiService.IsAuthenticatedAsync())
@@ -336,6 +340,12 @@ public partial class CourseDetailViewModel : ObservableObject
 	{
 		if (assessment == null || Course == null) return;
 
+		if (Course.Id <= 0)
+		{
+			await Application.Current.MainPage.DisplayAlert("Error", "Course must be saved before viewing assessments.", "OK");
+			return;
+		}
+
 		await Shell.Current.GoToAsync($"{nameof(Views.AssessmentsPage)}?courseId={Course.Id}");
 	}
 
@@ -343,6 +353,12 @@ public partial class CourseDetailViewModel : ObservableObject
 	private async Task ManageAssessmentsAsync()
 	{
 		if (Course == null) return;
+
+		if (Course.Id <= 0)
+		{
+			await Application.Current.MainPage.DisplayAlert("Error", "Course must be saved before managing assessments.", "OK");
+			return;
+		}
 
 		await Shell.Current.GoToAsync($"{nameof(Views.AssessmentsPage)}?courseId={Course.Id}");
 	}

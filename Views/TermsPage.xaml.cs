@@ -31,6 +31,11 @@ public partial class TermsPage : ContentPage
 			// User can try adding a new term which will trigger database initialization
 		}
 	}
+
+	private async void LoginToolbarItem_Clicked(object sender, EventArgs e)
+	{
+		await Shell.Current.GoToAsync("//LoginPage");
+	}
 }
 
 

@@ -28,6 +28,11 @@ public partial class FinancialPage : ContentPage
 	{
 		await Shell.Current.GoToAsync("//ExpensePage");
 	}
+
+	private async void LoginToolbarItem_Clicked(object sender, EventArgs e)
+	{
+		await Shell.Current.GoToAsync("//LoginPage");
+	}
 }
 
 

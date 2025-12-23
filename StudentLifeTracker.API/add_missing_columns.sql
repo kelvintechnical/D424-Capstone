@@ -28,3 +28,4 @@ GO
 
 PRINT 'Columns added successfully';
 
+

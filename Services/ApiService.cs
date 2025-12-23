@@ -9,7 +9,7 @@ public class ApiService
 {
     private readonly HttpClient _httpClient;
     // TODO: Move to configuration (appsettings.json or Preferences) for production
-    private readonly string _baseUrl = "https://localhost:7119";
+    private readonly string _baseUrl = "https://spt-api-krt2025.azurewebsites.net";
     private const string TokenKey = "auth_token";
     private const string RefreshTokenKey = "refresh_token";
     private const string UserKey = "user_data";
@@ -19,7 +19,7 @@ public class ApiService
         _httpClient = new HttpClient
         {
             //BaseAddress = new Uri(_baseUrl),
-            BaseAddress = new Uri("http://localhost:5052/"),
+            BaseAddress = new Uri("https://spt-api-krt2025.azurewebsites.net/"),
             Timeout = TimeSpan.FromSeconds(30)
         };
 

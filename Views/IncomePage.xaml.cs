@@ -27,5 +27,10 @@ public partial class IncomePage : ContentPage
 			vm.EditIncomeCommand.Execute(income);
 		}
 	}
+
+	private async void LoginToolbarItem_Clicked(object sender, EventArgs e)
+	{
+		await Shell.Current.GoToAsync("//LoginPage");
+	}
 }
 

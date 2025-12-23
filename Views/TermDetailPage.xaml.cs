@@ -29,5 +29,10 @@ public partial class TermDetailPage : ContentPage
 		var vm = (TermDetailViewModel)BindingContext;
 		await vm.LoadTermAsync(TermId);
 	}
+
+	private async void LoginToolbarItem_Clicked(object sender, EventArgs e)
+	{
+		await Shell.Current.GoToAsync("//LoginPage");
+	}
 }
 

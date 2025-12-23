@@ -5,6 +5,9 @@
              xmlns:viewmodels="clr-namespace:StudentProgressTracker.ViewModels"
              x:DataType="viewmodels:TermDetailViewModel"
              Title="Term Details">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Login" Order="Secondary" Clicked="LoginToolbarItem_Clicked" />
+    </ContentPage.ToolbarItems>
     <Shell.BackButtonBehavior>
         <BackButtonBehavior IsEnabled="True" IsVisible="True" />
     </Shell.BackButtonBehavior>

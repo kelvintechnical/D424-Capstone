@@ -6,6 +6,9 @@
              xmlns:models="clr-namespace:StudentProgressTracker.Models"
              x:DataType="viewmodels:TermsViewModel"
              Title="Academic Terms">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Login" Order="Secondary" Clicked="LoginToolbarItem_Clicked" />
+    </ContentPage.ToolbarItems>
     <Grid RowDefinitions="Auto,*,Auto" Padding="16">
         <Label Text="Academic Terms" Style="{StaticResource Headline}" />
 

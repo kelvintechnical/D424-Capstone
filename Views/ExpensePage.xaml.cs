@@ -35,5 +35,10 @@ public partial class ExpensePage : ContentPage
 			vm.SelectedCategory = category;
 		}
 	}
+
+	private async void LoginToolbarItem_Clicked(object sender, EventArgs e)
+	{
+		await Shell.Current.GoToAsync("//LoginPage");
+	}
 }
 

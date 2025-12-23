@@ -29,6 +29,11 @@ public partial class CourseDetailPage : ContentPage
 		var vm = (CourseDetailViewModel)BindingContext;
 		await vm.LoadCourseAsync(CourseId);
 	}
+
+	private async void LoginToolbarItem_Clicked(object sender, EventArgs e)
+	{
+		await Shell.Current.GoToAsync("//LoginPage");
+	}
 }
 
 

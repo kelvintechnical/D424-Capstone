@@ -6,6 +6,9 @@
              xmlns:dto="clr-namespace:StudentLifeTracker.Shared.DTOs;assembly=StudentLifeTracker.Shared"
              x:DataType="viewmodels:CategoryViewModel"
              Title="Categories">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Login" Order="Secondary" Clicked="LoginToolbarItem_Clicked" />
+    </ContentPage.ToolbarItems>
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="20">
             <Grid ColumnDefinitions="*,Auto">

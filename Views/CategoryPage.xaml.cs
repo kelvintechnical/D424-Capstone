@@ -35,6 +35,11 @@ public partial class CategoryPage : ContentPage
 			vm.DeleteCategoryCommand.Execute(category);
 		}
 	}
+
+	private async void LoginToolbarItem_Clicked(object sender, EventArgs e)
+	{
+		await Shell.Current.GoToAsync("//LoginPage");
+	}
 }
 
 

@@ -5,6 +5,9 @@
              xmlns:viewmodels="clr-namespace:StudentProgressTracker.ViewModels"
              x:DataType="viewmodels:GPAViewModel"
              Title="GPA Calculator">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Login" Order="Secondary" Clicked="LoginToolbarItem_Clicked" />
+    </ContentPage.ToolbarItems>
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="20">
             <Label Text="GPA Calculator &amp; Projection" Style="{StaticResource Headline}" />

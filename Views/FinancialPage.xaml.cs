@@ -21,12 +21,12 @@ public partial class FinancialPage : ContentPage
 
 	private async void NavigateToIncome_Clicked(object sender, EventArgs e)
 	{
-		await Shell.Current.GoToAsync("//IncomePage");
+		await Shell.Current.GoToAsync(nameof(IncomePage));
 	}
 
 	private async void NavigateToExpense_Clicked(object sender, EventArgs e)
 	{
-		await Shell.Current.GoToAsync("//ExpensePage");
+		await Shell.Current.GoToAsync(nameof(ExpensePage));
 	}
 
 	private async void LoginToolbarItem_Clicked(object sender, EventArgs e)

@@ -16,10 +16,21 @@ public partial class ExpenseViewModel : ObservableObject
 	[ObservableProperty] private CategoryDTO? selectedCategory;
 	[ObservableProperty] private bool isLoading;
 	[ObservableProperty] private bool isEditing;
-	[ObservableProperty] private decimal amount;
+	[ObservableProperty] private string amountText = string.Empty;
 	[ObservableProperty] private string description = string.Empty;
 	[ObservableProperty] private DateTime date = DateTime.Today;
 	[ObservableProperty] private int selectedCategoryId;
+
+	private decimal Amount
+	{
+		get
+		{
+			if (decimal.TryParse(AmountText, out var result))
+				return result;
+			return 0;
+		}
+		set => AmountText = value.ToString("F2");
+	}
 
 	partial void OnSelectedCategoryChanged(CategoryDTO? value)
 	{
@@ -42,12 +53,18 @@ public partial class ExpenseViewModel : ObservableObject
 		IsLoading = true;
 		try
 		{
-			// Load categories
+			// Load categories first (required for expense creation)
 			var categoryList = await _financialService.GetCategoriesAsync();
 			Categories.Clear();
 			foreach (var category in categoryList)
 			{
 				Categories.Add(category);
+			}
+
+			// If no categories exist, show a message but don't block
+			if (Categories.Count == 0)
+			{
+				System.Diagnostics.Debug.WriteLine("No categories found. User may need to create categories first.");
 			}
 
 			// Load expenses
@@ -60,6 +77,7 @@ public partial class ExpenseViewModel : ObservableObject
 		}
 		catch (Exception ex)
 		{
+			System.Diagnostics.Debug.WriteLine($"Error loading expense data: {ex}");
 			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to load data: {ex.Message}", "OK");
 		}
 		finally
@@ -69,13 +87,35 @@ public partial class ExpenseViewModel : ObservableObject
 	}
 
 	[RelayCommand]
-	public void StartNewExpense()
+	public async Task StartNewExpense()
 	{
+		// Ensure categories are loaded before starting new expense
+		if (Categories.Count == 0)
+		{
+			await LoadDataAsync();
+		}
+
+		if (Categories.Count == 0)
+		{
+			var createCategory = await Application.Current.MainPage.DisplayAlert(
+				"No Categories",
+				"You need to create at least one category before adding expenses. Would you like to go to the Categories page?",
+				"Yes",
+				"No");
+			
+			if (createCategory)
+			{
+				await Shell.Current.GoToAsync(nameof(Views.CategoryPage));
+			}
+			return;
+		}
+
 		SelectedExpense = null;
-		Amount = 0;
+		AmountText = string.Empty;
 		Description = string.Empty;
 		Date = DateTime.Today;
 		SelectedCategoryId = Categories.FirstOrDefault()?.Id ?? 0;
+		SelectedCategory = Categories.FirstOrDefault();
 		IsEditing = true;
 	}
 
@@ -83,7 +123,7 @@ public partial class ExpenseViewModel : ObservableObject
 	public void EditExpense(ExpenseDTO expense)
 	{
 		SelectedExpense = expense;
-		Amount = expense.Amount;
+		AmountText = expense.Amount.ToString("F2");
 		Description = expense.Description;
 		Date = expense.Date;
 		SelectedCategoryId = expense.CategoryId;
@@ -205,7 +245,24 @@ public partial class ExpenseViewModel : ObservableObject
 	[RelayCommand]
 	private async Task GoBackAsync()
 	{
-		await Shell.Current.GoToAsync("..");
+		try
+		{
+			// Try relative navigation first
+			if (Shell.Current.Navigation.NavigationStack.Count > 1)
+			{
+				await Shell.Current.GoToAsync("..");
+			}
+			else
+			{
+				// Fallback to FinancialPage if navigation stack is empty
+				await Shell.Current.GoToAsync($"//{nameof(Views.FinancialPage)}");
+			}
+		}
+		catch
+		{
+			// If relative navigation fails, go to FinancialPage
+			await Shell.Current.GoToAsync($"//{nameof(Views.FinancialPage)}");
+		}
 	}
 }
 

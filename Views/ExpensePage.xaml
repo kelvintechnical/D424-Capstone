@@ -28,8 +28,8 @@
                             </DataTrigger>
                         </Label.Triggers>
                     </Label>
-                    <Entry Text="{Binding Amount, StringFormat='{0:F2}'}" 
-                           Placeholder="Amount" 
+                    <Entry Text="{Binding AmountText}" 
+                           Placeholder="Amount (e.g., 52.55)" 
                            Keyboard="Numeric" />
                     <Entry Text="{Binding Description}" 
                            Placeholder="Description" />

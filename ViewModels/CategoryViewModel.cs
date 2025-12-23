@@ -154,7 +154,24 @@ public partial class CategoryViewModel : ObservableObject
 	[RelayCommand]
 	private async Task GoBackAsync()
 	{
-		await Shell.Current.GoToAsync("..");
+		try
+		{
+			// Try relative navigation first
+			if (Shell.Current.Navigation.NavigationStack.Count > 1)
+			{
+				await Shell.Current.GoToAsync("..");
+			}
+			else
+			{
+				// Fallback to FinancialPage if navigation stack is empty
+				await Shell.Current.GoToAsync($"//{nameof(Views.FinancialPage)}");
+			}
+		}
+		catch
+		{
+			// If relative navigation fails, go to FinancialPage
+			await Shell.Current.GoToAsync($"//{nameof(Views.FinancialPage)}");
+		}
 	}
 }
 

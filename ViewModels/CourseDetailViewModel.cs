@@ -139,10 +139,11 @@ public partial class CourseDetailViewModel : ObservableObject
 	private static DateTime CombineDateAndTime(DateTime date, TimeSpan time) =>
 		DateTime.SpecifyKind(date.Date + time, DateTimeKind.Local);
 
-	public async Task SaveCourseAsync()
+	public async Task<bool> SaveCourseAsync()
 	{
-		if (Course is null) return;
+		if (Course is null) return false;
 		IsSaving = true;
+		bool apiSyncSuccess = false;
 		try
 		{
 			MapPropertiesToCourse();
@@ -198,17 +199,27 @@ public partial class CourseDetailViewModel : ObservableObject
 						{
 							Course.Id = response.Data.Id;
 							await _db.SaveCourseAsync(Course);
+							apiSyncSuccess = true;
+						}
+						else
+						{
+							System.Diagnostics.Debug.WriteLine($"Failed to create course in API: {response.Message}");
 						}
 					}
 					else
 					{
-						await _apiService.UpdateCourseAsync(Course.Id, courseDto);
+						var response = await _apiService.UpdateCourseAsync(Course.Id, courseDto);
+						apiSyncSuccess = response.Success;
+						if (!apiSyncSuccess)
+						{
+							System.Diagnostics.Debug.WriteLine($"Failed to update course in API: {response.Message}");
+						}
 					}
 				}
 				catch (Exception ex)
 				{
 					System.Diagnostics.Debug.WriteLine($"Failed to sync course to API: {ex.Message}");
-					// Continue even if API sync fails - local save succeeded
+					apiSyncSuccess = false;
 				}
 			}
 
@@ -219,6 +230,8 @@ public partial class CourseDetailViewModel : ObservableObject
 				Course.StartDate,
 				Course.EndDate,
 				Course.NotificationsEnabled);
+
+			return apiSyncSuccess || !await _apiService.IsAuthenticatedAsync(); // Return true if synced or if not authenticated (local only)
 		}
 		finally
 		{
@@ -253,8 +266,15 @@ public partial class CourseDetailViewModel : ObservableObject
 	{
 		try
 		{
-			await SaveCourseAsync();
-			await Application.Current.MainPage.DisplayAlert("Success", "Course saved successfully", "OK");
+			var syncSuccess = await SaveCourseAsync();
+			if (await _apiService.IsAuthenticatedAsync() && !syncSuccess)
+			{
+				await Application.Current.MainPage.DisplayAlert("Warning", "Course saved locally but failed to sync to server. Some features may not work until synced.", "OK");
+			}
+			else
+			{
+				await Application.Current.MainPage.DisplayAlert("Success", "Course saved successfully", "OK");
+			}
 		}
 		catch (Exception ex)
 		{
@@ -364,11 +384,31 @@ public partial class CourseDetailViewModel : ObservableObject
 		try
 		{
 			// Ensure course exists in API before saving grade
-			// If course is local only (Id == 0) or hasn't been synced, sync it first
-			if (Course.Id == 0 || !await EnsureCourseSyncedAsync())
+			// If course is local only (Id == 0) or hasn't been synced, try to sync it first
+			if (Course.Id == 0)
 			{
-				await Application.Current.MainPage.DisplayAlert("Error", "Course must be saved to the server before saving grades. Please save the course first.", "OK");
-				return;
+				// Course hasn't been saved yet - try to save it now
+				var syncSuccess = await EnsureCourseSyncedAsync();
+				if (!syncSuccess)
+				{
+					await Application.Current.MainPage.DisplayAlert("Error", "Course must be saved to the server before saving grades. Please save the course first.", "OK");
+					return;
+				}
+			}
+			else
+			{
+				// Verify course exists in API
+				var courseResponse = await _apiService.GetCourseAsync(Course.Id);
+				if (!courseResponse.Success || courseResponse.Data == null)
+				{
+					// Course doesn't exist in API, try to sync it
+					var syncSuccess = await EnsureCourseSyncedAsync();
+					if (!syncSuccess)
+					{
+						await Application.Current.MainPage.DisplayAlert("Error", "Course must be saved to the server before saving grades. Please save the course first.", "OK");
+						return;
+					}
+				}
 			}
 
 			var letterGrade = _gpaService.ConvertPercentToLetter(grade);

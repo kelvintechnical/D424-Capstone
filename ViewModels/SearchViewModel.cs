@@ -29,9 +29,12 @@ public partial class SearchViewModel : ObservableObject
 		}
 	}
 
-	public SearchViewModel(SearchService searchService)
+	private readonly ApiService _apiService;
+
+	public SearchViewModel(SearchService searchService, ApiService apiService)
 	{
 		_searchService = searchService;
+		_apiService = apiService;
 	}
 
 	[RelayCommand]
@@ -40,6 +43,13 @@ public partial class SearchViewModel : ObservableObject
 		if (string.IsNullOrWhiteSpace(SearchQuery))
 		{
 			await Application.Current.MainPage.DisplayAlert("Search", "Please enter a search query", "OK");
+			return;
+		}
+
+		// Check if user is authenticated
+		if (!await _apiService.IsAuthenticatedAsync())
+		{
+			await Application.Current.MainPage.DisplayAlert("Authentication Required", "Please login to search courses and terms.", "OK");
 			return;
 		}
 
@@ -70,13 +80,12 @@ public partial class SearchViewModel : ObservableObject
 				SearchResults.Add(result);
 			}
 
-			if (SearchResults.Count == 0)
-			{
-				await Application.Current.MainPage.DisplayAlert("No Results", "No items found matching your search.", "OK");
-			}
+			// Don't show alert if no results - the UI already shows "No results found"
+			// Only show alert if there was an actual error
 		}
 		catch (Exception ex)
 		{
+			System.Diagnostics.Debug.WriteLine($"Search error: {ex}");
 			await Application.Current.MainPage.DisplayAlert("Error", $"Search failed: {ex.Message}", "OK");
 		}
 		finally

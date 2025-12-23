@@ -43,24 +43,50 @@ public partial class GPAViewModel : ObservableObject
 				CurrentTermGPA = gpaResponse.Data.GPA;
 			}
 
+			// Get all courses for the term (for dropdown)
+			var coursesResponse = await _apiService.GetCoursesByTermAsync(termId);
+			var courses = new Dictionary<int, CourseDTO>();
+			if (coursesResponse.Success && coursesResponse.Data != null)
+			{
+				foreach (var course in coursesResponse.Data)
+				{
+					courses[course.Id] = course;
+				}
+			}
+
 			// Get term grades
 			var gradesResponse = await _apiService.GetTermGradesAsync(termId);
+			var gradesByCourseId = new Dictionary<int, GradeDTO>();
 			if (gradesResponse.Success && gradesResponse.Data != null)
 			{
-				CoursesWithGrades.Clear();
 				foreach (var grade in gradesResponse.Data)
 				{
-					var points = _gpaService.ConvertLetterToPoints(grade.LetterGrade);
-					CoursesWithGrades.Add(new CourseGradeInfo
-					{
-						CourseId = grade.CourseId,
-						CourseTitle = $"Course {grade.CourseId}",
-						LetterGrade = grade.LetterGrade,
-						Percentage = grade.Percentage,
-						CreditHours = grade.CreditHours,
-						GradePoints = points
-					});
+					gradesByCourseId[grade.CourseId] = grade;
 				}
+			}
+
+			// Populate CoursesWithGrades - include all courses, with grade info if available
+			CoursesWithGrades.Clear();
+			foreach (var course in courses.Values)
+			{
+				var grade = gradesByCourseId.ContainsKey(course.Id) ? gradesByCourseId[course.Id] : null;
+				var points = grade != null ? _gpaService.ConvertLetterToPoints(grade.LetterGrade) : 0.0;
+				
+				CoursesWithGrades.Add(new CourseGradeInfo
+				{
+					CourseId = course.Id,
+					CourseTitle = course.Title,
+					LetterGrade = grade?.LetterGrade ?? string.Empty,
+					Percentage = grade?.Percentage,
+					CreditHours = grade?.CreditHours ?? course.CreditHours,
+					GradePoints = points
+				});
+			}
+
+			// If no courses found, show message
+			if (CoursesWithGrades.Count == 0)
+			{
+				await Application.Current.MainPage.DisplayAlert("No Courses", "No courses found for this term. Please add courses first.", "OK");
 			}
 		}
 		catch (Exception ex)
@@ -148,4 +174,5 @@ public class CourseGradeInfo
 	public int CreditHours { get; set; }
 	public double GradePoints { get; set; }
 }
+
 

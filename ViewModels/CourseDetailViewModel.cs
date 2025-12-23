@@ -354,8 +354,23 @@ public partial class CourseDetailViewModel : ObservableObject
 			return;
 		}
 
+		// Check if user is authenticated
+		if (!await _apiService.IsAuthenticatedAsync())
+		{
+			await Application.Current.MainPage.DisplayAlert("Error", "Please login to save grades", "OK");
+			return;
+		}
+
 		try
 		{
+			// Ensure course exists in API before saving grade
+			// If course is local only (Id == 0) or hasn't been synced, sync it first
+			if (Course.Id == 0 || !await EnsureCourseSyncedAsync())
+			{
+				await Application.Current.MainPage.DisplayAlert("Error", "Course must be saved to the server before saving grades. Please save the course first.", "OK");
+				return;
+			}
+
 			var letterGrade = _gpaService.ConvertPercentToLetter(grade);
 			var gradeDto = new GradeDTO
 			{
@@ -386,6 +401,86 @@ public partial class CourseDetailViewModel : ObservableObject
 		catch (Exception ex)
 		{
 			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to save grade: {ex.Message}", "OK");
+		}
+	}
+
+	private async Task<bool> EnsureCourseSyncedAsync()
+	{
+		if (Course == null || Instructor == null) return false;
+
+		try
+		{
+			// Check if course exists in API
+			if (Course.Id > 0)
+			{
+				var courseResponse = await _apiService.GetCourseAsync(Course.Id);
+				if (courseResponse.Success && courseResponse.Data != null)
+				{
+					// Course exists in API
+					return true;
+				}
+			}
+
+			// Course doesn't exist in API, need to sync it
+			MapPropertiesToCourse();
+			if (!Course.IsValid())
+			{
+				return false;
+			}
+
+			// Save instructor first if needed
+			Instructor.Id = Course.InstructorId;
+			await _db.SaveInstructorAsync(Instructor);
+			Course.InstructorId = Instructor.Id;
+
+			// Create course in API
+			var courseDto = new CourseDTO
+			{
+				Id = Course.Id,
+				TermId = Course.TermId,
+				Title = Course.Title,
+				StartDate = Course.StartDate,
+				EndDate = Course.EndDate,
+				Status = Course.Status,
+				InstructorName = Instructor.Name,
+				InstructorPhone = Instructor.Phone,
+				InstructorEmail = Instructor.Email,
+				Notes = Course.Notes,
+				NotificationsEnabled = Course.NotificationsEnabled,
+				CreditHours = Course.CreditHours,
+				CurrentGrade = Course.CurrentGrade,
+				LetterGrade = Course.LetterGrade,
+				CreatedAt = Course.CreatedAt,
+				UpdatedAt = DateTime.UtcNow
+			};
+
+			if (Course.Id == 0)
+			{
+				// Create new course
+				var createResponse = await _apiService.CreateCourseAsync(courseDto);
+				if (createResponse.Success && createResponse.Data != null && createResponse.Data.Id > 0)
+				{
+					Course.Id = createResponse.Data.Id;
+					await _db.SaveCourseAsync(Course);
+					return true;
+				}
+			}
+			else
+			{
+				// Update existing course
+				var updateResponse = await _apiService.UpdateCourseAsync(Course.Id, courseDto);
+				if (updateResponse.Success)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"Error ensuring course synced: {ex.Message}");
+			return false;
 		}
 	}
 

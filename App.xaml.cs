@@ -21,7 +21,35 @@ public partial class App : Application
 	protected override async void OnStart()
 	{
 		base.OnStart();
-		await CheckAuthenticationAsync();
+		// Always start at login page - don't check authentication on start
+		await MainThread.InvokeOnMainThreadAsync(async () =>
+		{
+			if (Shell.Current != null)
+			{
+				await Shell.Current.GoToAsync("//LoginPage");
+			}
+		});
+	}
+
+	protected override void OnSleep()
+	{
+		base.OnSleep();
+		// Clear tokens on app close to force login on next launch
+		_ = Task.Run(async () =>
+		{
+			try
+			{
+				var apiService = ServiceHelper.Services?.GetService<Services.ApiService>();
+				if (apiService != null)
+				{
+					await apiService.LogoutAsync();
+				}
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"[App] Error clearing tokens on sleep: {ex.Message}");
+			}
+		});
 	}
 
 	protected override Window CreateWindow(IActivationState? activationState)
@@ -32,15 +60,17 @@ public partial class App : Application
 			var window = new Window(shell) { Title = "StudentProgressTracker" };
 			
 			// Make window visible and activate it
-			window.Activated += (s, e) =>
+			window.Activated += async (s, e) =>
 			{
 #if DEBUG
 				System.Diagnostics.Debug.WriteLine("[App] Window activated");
 #endif
+				// Always navigate to login page on window activation
+				if (Shell.Current != null)
+				{
+					await Shell.Current.GoToAsync("//LoginPage");
+				}
 			};
-			
-			// Check authentication on window creation
-			_ = Task.Run(async () => await CheckAuthenticationAsync());
 			
 			return window;
 		}
@@ -56,60 +86,6 @@ public partial class App : Application
 			}
 			catch { }
 			throw;
-		}
-	}
-
-	private async Task CheckAuthenticationAsync()
-	{
-		try
-		{
-			// Wait a bit for services to be ready
-			await Task.Delay(100);
-			
-			var apiService = ServiceHelper.Services?.GetService<Services.ApiService>();
-			if (apiService == null)
-			{
-				// Services not ready yet, navigate to login
-				await MainThread.InvokeOnMainThreadAsync(async () =>
-				{
-					if (Shell.Current != null)
-					{
-						await Shell.Current.GoToAsync("//LoginPage");
-					}
-				});
-				return;
-			}
-
-			var isAuthenticated = await apiService.IsAuthenticatedAsync();
-			
-			await MainThread.InvokeOnMainThreadAsync(async () =>
-			{
-				if (Shell.Current != null)
-				{
-					if (isAuthenticated)
-					{
-						// User is authenticated, go to main app
-						await Shell.Current.GoToAsync("//TermsPage");
-					}
-					else
-					{
-						// User not authenticated, go to login
-						await Shell.Current.GoToAsync("//LoginPage");
-					}
-				}
-			});
-		}
-		catch (Exception ex)
-		{
-			System.Diagnostics.Debug.WriteLine($"[App] CheckAuthenticationAsync failed: {ex.Message}");
-			// On error, default to login page
-			await MainThread.InvokeOnMainThreadAsync(async () =>
-			{
-				if (Shell.Current != null)
-				{
-					await Shell.Current.GoToAsync("//LoginPage");
-				}
-			});
 		}
 	}
 }

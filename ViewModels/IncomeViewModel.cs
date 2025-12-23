@@ -166,6 +166,12 @@ public partial class IncomeViewModel : ObservableObject
 			IsLoading = false;
 		}
 	}
+
+	[RelayCommand]
+	private async Task GoBackAsync()
+	{
+		await Shell.Current.GoToAsync("..");
+	}
 }
 
 

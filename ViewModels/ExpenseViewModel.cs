@@ -201,5 +201,11 @@ public partial class ExpenseViewModel : ObservableObject
 	{
 		return Categories.FirstOrDefault(c => c.Id == categoryId)?.Name ?? "Unknown";
 	}
+
+	[RelayCommand]
+	private async Task GoBackAsync()
+	{
+		await Shell.Current.GoToAsync("..");
+	}
 }
 

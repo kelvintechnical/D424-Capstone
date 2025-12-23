@@ -9,7 +9,8 @@
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Login" Order="Secondary" Clicked="LoginToolbarItem_Clicked" />
     </ContentPage.ToolbarItems>
-    <ScrollView>
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="20">
             <Grid ColumnDefinitions="*,Auto">
                 <Label Text="Expenses" Style="{StaticResource Headline}" />
@@ -80,5 +81,19 @@
             <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
         </VerticalStackLayout>
     </ScrollView>
+    
+    <!-- Back Button at Bottom -->
+    <Button Grid.Row="1"
+            Text="← Back" 
+            Command="{Binding GoBackCommand}"
+            BackgroundColor="{StaticResource Secondary}"
+            TextColor="{StaticResource Charcoal}"
+            FontSize="18"
+            FontAttributes="Bold"
+            CornerRadius="0"
+            HeightRequest="60"
+            HorizontalOptions="Fill"
+            Margin="0" />
+    </Grid>
 </ContentPage>
 

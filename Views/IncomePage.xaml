@@ -9,72 +9,87 @@
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Login" Order="Secondary" Clicked="LoginToolbarItem_Clicked" />
     </ContentPage.ToolbarItems>
-    <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="20">
-            <Grid ColumnDefinitions="*,Auto">
-                <Label Text="Income" Style="{StaticResource Headline}" />
-                <Button Text="Add" Grid.Column="1" 
-                        Command="{Binding StartNewIncomeCommand}" />
-            </Grid>
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView>
+            <VerticalStackLayout Padding="16" Spacing="20">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Income" Style="{StaticResource Headline}" />
+                    <Button Text="Add" Grid.Column="1" 
+                            Command="{Binding StartNewIncomeCommand}" />
+                </Grid>
 
-            <!-- Edit Form -->
-            <Frame IsVisible="{Binding IsEditing}" Padding="16" HasShadow="True" BorderColor="{StaticResource Primary}">
-                <VerticalStackLayout Spacing="12">
-                    <Label FontSize="18" FontAttributes="Bold" Text="Edit Income">
-                        <Label.Triggers>
-                            <DataTrigger TargetType="Label" Binding="{Binding SelectedIncome}" Value="{x:Null}">
-                                <Setter Property="Text" Value="New Income" />
-                            </DataTrigger>
-                        </Label.Triggers>
-                    </Label>
-                    <Entry Text="{Binding Amount, StringFormat='{0:F2}'}" 
-                           Placeholder="Amount" 
-                           Keyboard="Numeric" />
-                    <Entry Text="{Binding Source}" 
-                           Placeholder="Source (e.g., Job, Scholarship)" />
-                    <DatePicker Date="{Binding Date}" />
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                        <Button Text="Save" Grid.Column="0" 
-                                Command="{Binding SaveIncomeCommand}" />
-                        <Button Text="Cancel" Grid.Column="1" 
-                                Command="{Binding CancelEditCommand}" />
-                    </Grid>
-                </VerticalStackLayout>
-            </Frame>
+                <!-- Edit Form -->
+                <Frame IsVisible="{Binding IsEditing}" Padding="16" HasShadow="True" BorderColor="{StaticResource Primary}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label FontSize="18" FontAttributes="Bold" Text="Edit Income">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label" Binding="{Binding SelectedIncome}" Value="{x:Null}">
+                                    <Setter Property="Text" Value="New Income" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                        <Entry Text="{Binding Amount, StringFormat='{0:F2}'}" 
+                               Placeholder="Amount" 
+                               Keyboard="Numeric" />
+                        <Entry Text="{Binding Source}" 
+                               Placeholder="Source (e.g., Job, Scholarship)" />
+                        <DatePicker Date="{Binding Date}" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <Button Text="Save" Grid.Column="0" 
+                                    Command="{Binding SaveIncomeCommand}" />
+                            <Button Text="Cancel" Grid.Column="1" 
+                                    Command="{Binding CancelEditCommand}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
 
-            <!-- Income List -->
-            <CollectionView ItemsSource="{Binding Incomes}">
-                <CollectionView.EmptyView>
-                    <Label Text="No income recorded yet." 
-                           TextColor="{StaticResource Gray600}" 
-                           HorizontalTextAlignment="Center" 
-                           Margin="0,12" />
-                </CollectionView.EmptyView>
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="dto:IncomeDTO">
-                        <Frame Padding="12" Margin="0,4" HasShadow="False" BorderColor="{StaticResource Gray200}">
-                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
-                                <VerticalStackLayout>
-                                    <Label Text="{Binding Source}" FontAttributes="Bold" />
-                                    <Label Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}" 
-                                           FontSize="12" TextColor="{StaticResource Gray600}" />
-                                </VerticalStackLayout>
-                                <Label Grid.Column="1" 
-                                       Text="{Binding Amount, StringFormat='${0:F2}'}" 
-                                       FontSize="18" FontAttributes="Bold" 
-                                       TextColor="{StaticResource Primary}" />
-                                <Button Grid.Column="2" 
-                                        Text="Edit" 
-                                        Clicked="EditIncome_Clicked"
-                                        CommandParameter="{Binding .}" />
-                            </Grid>
-                        </Frame>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                <!-- Income List -->
+                <CollectionView ItemsSource="{Binding Incomes}">
+                    <CollectionView.EmptyView>
+                        <Label Text="No income recorded yet." 
+                               TextColor="{StaticResource Gray600}" 
+                               HorizontalTextAlignment="Center" 
+                               Margin="0,12" />
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="dto:IncomeDTO">
+                            <Frame Padding="12" Margin="0,4" HasShadow="False" BorderColor="{StaticResource Gray200}">
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding Source}" FontAttributes="Bold" />
+                                        <Label Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}" 
+                                               FontSize="12" TextColor="{StaticResource Gray600}" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1" 
+                                           Text="{Binding Amount, StringFormat='${0:F2}'}" 
+                                           FontSize="18" FontAttributes="Bold" 
+                                           TextColor="{StaticResource Primary}" />
+                                    <Button Grid.Column="2" 
+                                            Text="Edit" 
+                                            Clicked="EditIncome_Clicked"
+                                            CommandParameter="{Binding .}" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
 
-            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
-        </VerticalStackLayout>
-    </ScrollView>
+                <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
+            </VerticalStackLayout>
+        </ScrollView>
+        
+        <!-- Back Button at Bottom -->
+        <Button Grid.Row="1"
+                Text="← Back" 
+                Command="{Binding GoBackCommand}"
+                BackgroundColor="{StaticResource Secondary}"
+                TextColor="{StaticResource Charcoal}"
+                FontSize="18"
+                FontAttributes="Bold"
+                CornerRadius="0"
+                HeightRequest="60"
+                HorizontalOptions="Fill"
+                Margin="0" />
+    </Grid>
 </ContentPage>
 

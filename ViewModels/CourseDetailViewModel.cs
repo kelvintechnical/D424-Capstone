@@ -162,7 +162,55 @@ public partial class CourseDetailViewModel : ObservableObject
 			Instructor.Id = Course.InstructorId;
 			await _db.SaveInstructorAsync(Instructor);
 			Course.InstructorId = Instructor.Id;
+			
+			// Save locally first
 			await _db.SaveCourseAsync(Course);
+
+			// Sync to API if authenticated
+			if (await _apiService.IsAuthenticatedAsync())
+			{
+				try
+				{
+					var courseDto = new CourseDTO
+					{
+						Id = Course.Id,
+						TermId = Course.TermId,
+						Title = Course.Title,
+						StartDate = Course.StartDate,
+						EndDate = Course.EndDate,
+						Status = Course.Status,
+						InstructorName = Instructor.Name,
+						InstructorPhone = Instructor.Phone,
+						InstructorEmail = Instructor.Email,
+						Notes = Course.Notes,
+						NotificationsEnabled = Course.NotificationsEnabled,
+						CreditHours = Course.CreditHours,
+						CurrentGrade = Course.CurrentGrade,
+						LetterGrade = Course.LetterGrade,
+						CreatedAt = Course.CreatedAt,
+						UpdatedAt = DateTime.UtcNow
+					};
+					
+					if (Course.Id == 0)
+					{
+						var response = await _apiService.CreateCourseAsync(courseDto);
+						if (response.Success && response.Data != null && response.Data.Id > 0)
+						{
+							Course.Id = response.Data.Id;
+							await _db.SaveCourseAsync(Course);
+						}
+					}
+					else
+					{
+						await _apiService.UpdateCourseAsync(Course.Id, courseDto);
+					}
+				}
+				catch (Exception ex)
+				{
+					System.Diagnostics.Debug.WriteLine($"Failed to sync course to API: {ex.Message}");
+					// Continue even if API sync fails - local save succeeded
+				}
+			}
 
 			// Schedule notifications for course start/end using the exact user-selected times
 			await _notifications.ScheduleCourseNotificationsAsync(
@@ -181,7 +229,23 @@ public partial class CourseDetailViewModel : ObservableObject
 	public async Task DeleteCourseAsync()
 	{
 		if (Course is null) return;
+		
+		// Delete locally first
 		await _db.DeleteCourseAsync(Course.Id);
+		
+		// Sync to API if authenticated
+		if (await _apiService.IsAuthenticatedAsync() && Course.Id > 0)
+		{
+			try
+			{
+				await _apiService.DeleteCourseAsync(Course.Id);
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"Failed to sync course deletion to API: {ex.Message}");
+				// Continue even if API sync fails - local delete succeeded
+			}
+		}
 	}
 
 	[RelayCommand]

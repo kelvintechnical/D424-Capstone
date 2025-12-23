@@ -3,12 +3,14 @@ using CommunityToolkit.Mvvm.Input;
 using StudentProgressTracker.Helpers;
 using StudentProgressTracker.Models;
 using StudentProgressTracker.Services;
+using StudentLifeTracker.Shared.DTOs;
 
 namespace StudentProgressTracker.ViewModels;
 
 public partial class TermDetailViewModel : ObservableObject
 {
 	private readonly DatabaseService _db;
+	private readonly ApiService _apiService;
 	private DateTime _previousValidStartDate = DateTime.Today;
 	private DateTime _previousValidEndDate = DateTime.Today;
 	private bool _isValidatingDate;
@@ -22,9 +24,10 @@ public partial class TermDetailViewModel : ObservableObject
 	[ObservableProperty] private string startDateError = string.Empty;
 	[ObservableProperty] private string endDateError = string.Empty;
 
-	public TermDetailViewModel(DatabaseService db)
+	public TermDetailViewModel(DatabaseService db, ApiService apiService)
 	{
 		_db = db;
+		_apiService = apiService;
 	}
 
 	public async Task LoadTermAsync(int termId)
@@ -71,7 +74,45 @@ public partial class TermDetailViewModel : ObservableObject
 		{
 			MapPropertiesToTerm();
 			if (!Term.IsValid()) throw new InvalidOperationException("Invalid term. End date must be after start date.");
+			
+			// Save locally first
 			await _db.SaveTermAsync(Term);
+			
+			// Sync to API if authenticated
+			if (await _apiService.IsAuthenticatedAsync())
+			{
+				try
+				{
+					var termDto = new TermDTO
+					{
+						Id = Term.Id,
+						Title = Term.Title,
+						StartDate = Term.StartDate,
+						EndDate = Term.EndDate,
+						CreatedAt = Term.CreatedAt,
+						UpdatedAt = DateTime.UtcNow
+					};
+					
+					if (Term.Id == 0)
+					{
+						var response = await _apiService.CreateTermAsync(termDto);
+						if (response.Success && response.Data != null && response.Data.Id > 0)
+						{
+							Term.Id = response.Data.Id;
+							await _db.SaveTermAsync(Term);
+						}
+					}
+					else
+					{
+						await _apiService.UpdateTermAsync(Term.Id, termDto);
+					}
+				}
+				catch (Exception ex)
+				{
+					System.Diagnostics.Debug.WriteLine($"Failed to sync term to API: {ex.Message}");
+					// Continue even if API sync fails - local save succeeded
+				}
+			}
 		}
 		finally
 		{
@@ -82,7 +123,23 @@ public partial class TermDetailViewModel : ObservableObject
 	public async Task DeleteTermAsync()
 	{
 		if (Term is null) return;
+		
+		// Delete locally first
 		await _db.DeleteTermAsync(Term.Id);
+		
+		// Sync to API if authenticated
+		if (await _apiService.IsAuthenticatedAsync() && Term.Id > 0)
+		{
+			try
+			{
+				await _apiService.DeleteTermAsync(Term.Id);
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"Failed to sync term deletion to API: {ex.Message}");
+				// Continue even if API sync fails - local delete succeeded
+			}
+		}
 	}
 
 	[RelayCommand]

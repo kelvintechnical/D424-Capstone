@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StudentProgressTracker.Models;
 using StudentProgressTracker.Services;
+using StudentLifeTracker.Shared.DTOs;
 using System.Collections.ObjectModel;
 
 namespace StudentProgressTracker.ViewModels;
@@ -9,6 +10,7 @@ namespace StudentProgressTracker.ViewModels;
 public partial class CourseListViewModel : ObservableObject
 {
 	private readonly DatabaseService _db;
+	private readonly ApiService _apiService;
 
 	[ObservableProperty]
 	private AcademicTerm? currentTerm;
@@ -28,9 +30,10 @@ public partial class CourseListViewModel : ObservableObject
 	[ObservableProperty]
 	private string courseCountDisplay = "0 of 6 courses";
 
-	public CourseListViewModel(DatabaseService db)
+	public CourseListViewModel(DatabaseService db, ApiService apiService)
 	{
 		_db = db;
+		_apiService = apiService;
 	}
 
 	public async Task LoadCoursesAsync(int termId)
@@ -58,7 +61,33 @@ public partial class CourseListViewModel : ObservableObject
 		if (count >= 6) throw new InvalidOperationException("Cannot add more than 6 courses to a term.");
 		if (!course.IsValid()) throw new InvalidOperationException("Invalid course");
 
+		// Save locally first
 		await _db.SaveCourseAsync(course);
+		
+		// Sync to API if authenticated
+		if (await _apiService.IsAuthenticatedAsync())
+		{
+			try
+			{
+				var courseDto = await ConvertToCourseDTOAsync(course);
+				var response = await _apiService.CreateCourseAsync(courseDto);
+				if (response.Success && response.Data != null)
+				{
+					// Update local course with server ID if it was a new course
+					if (course.Id == 0 && response.Data.Id > 0)
+					{
+						course.Id = response.Data.Id;
+						await _db.SaveCourseAsync(course);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"Failed to sync course to API: {ex.Message}");
+				// Continue even if API sync fails - local save succeeded
+			}
+		}
+		
 		Courses.Add(course);
 		await LoadCoursesAsync(course.TermId);
 	}
@@ -66,13 +95,47 @@ public partial class CourseListViewModel : ObservableObject
 	public async Task UpdateCourseAsync(Course course)
 	{
 		if (!course.IsValid()) throw new InvalidOperationException("Invalid course");
+		
+		// Save locally first
 		await _db.SaveCourseAsync(course);
+		
+		// Sync to API if authenticated
+		if (await _apiService.IsAuthenticatedAsync())
+		{
+			try
+			{
+				var courseDto = await ConvertToCourseDTOAsync(course);
+				await _apiService.UpdateCourseAsync(course.Id, courseDto);
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"Failed to sync course update to API: {ex.Message}");
+				// Continue even if API sync fails - local save succeeded
+			}
+		}
+		
 		await LoadCoursesAsync(course.TermId);
 	}
 
 	public async Task DeleteCourseAsync(Course course)
 	{
+		// Delete locally first
 		await _db.DeleteCourseAsync(course.Id);
+		
+		// Sync to API if authenticated
+		if (await _apiService.IsAuthenticatedAsync() && course.Id > 0)
+		{
+			try
+			{
+				await _apiService.DeleteCourseAsync(course.Id);
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"Failed to sync course deletion to API: {ex.Message}");
+				// Continue even if API sync fails - local delete succeeded
+			}
+		}
+		
 		Courses.Remove(course);
 		var count = await _db.GetCourseCountByTermAsync(course.TermId);
 		CanAddCourse = count < 6;
@@ -183,6 +246,30 @@ public partial class CourseListViewModel : ObservableObject
 	private async Task GoBackAsync()
 	{
 		await Shell.Current.GoToAsync("..");
+	}
+
+	private async Task<CourseDTO> ConvertToCourseDTOAsync(Course course)
+	{
+		var instructor = await _db.GetInstructorAsync(course.InstructorId);
+		return new CourseDTO
+		{
+			Id = course.Id,
+			TermId = course.TermId,
+			Title = course.Title,
+			StartDate = course.StartDate,
+			EndDate = course.EndDate,
+			Status = course.Status,
+			InstructorName = instructor?.Name ?? string.Empty,
+			InstructorPhone = instructor?.Phone ?? string.Empty,
+			InstructorEmail = instructor?.Email ?? string.Empty,
+			Notes = course.Notes,
+			NotificationsEnabled = course.NotificationsEnabled,
+			CreditHours = course.CreditHours,
+			CurrentGrade = course.CurrentGrade,
+			LetterGrade = course.LetterGrade,
+			CreatedAt = course.CreatedAt,
+			UpdatedAt = DateTime.UtcNow
+		};
 	}
 }
 

@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StudentProgressTracker.Models;
 using StudentProgressTracker.Services;
+using StudentLifeTracker.Shared.DTOs;
 using System.Collections.ObjectModel;
 
 namespace StudentProgressTracker.ViewModels;
@@ -10,6 +11,7 @@ public partial class TermsViewModel : ObservableObject
 {
 	private readonly DatabaseService _db;
 	private readonly NotificationService _notifications;
+	private readonly ApiService _apiService;
 
 	[ObservableProperty]
 	private ObservableCollection<AcademicTerm> terms = new();
@@ -23,10 +25,11 @@ public partial class TermsViewModel : ObservableObject
 	[ObservableProperty]
 	private bool isLoading;
 
-	public TermsViewModel(DatabaseService db, NotificationService notifications)
+	public TermsViewModel(DatabaseService db, NotificationService notifications, ApiService apiService)
 	{
 		_db = db;
 		_notifications = notifications;
+		_apiService = apiService;
 	}
 
 	public async Task LoadTermsAsync()
@@ -47,20 +50,81 @@ public partial class TermsViewModel : ObservableObject
 	public async Task AddTermAsync(AcademicTerm term)
 	{
 		if (!term.IsValid()) throw new InvalidOperationException("Invalid term");
+		
+		// Save locally first
 		await _db.SaveTermAsync(term);
+		
+		// Sync to API if authenticated
+		if (await _apiService.IsAuthenticatedAsync())
+		{
+			try
+			{
+				var termDto = ConvertToTermDTO(term);
+				var response = await _apiService.CreateTermAsync(termDto);
+				if (response.Success && response.Data != null)
+				{
+					// Update local term with server ID if it was a new term
+					if (term.Id == 0 && response.Data.Id > 0)
+					{
+						term.Id = response.Data.Id;
+						await _db.SaveTermAsync(term);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"Failed to sync term to API: {ex.Message}");
+				// Continue even if API sync fails - local save succeeded
+			}
+		}
+		
 		Terms.Add(term);
 	}
 
 	public async Task UpdateTermAsync(AcademicTerm term)
 	{
 		if (!term.IsValid()) throw new InvalidOperationException("Invalid term");
+		
+		// Save locally first
 		await _db.SaveTermAsync(term);
+		
+		// Sync to API if authenticated
+		if (await _apiService.IsAuthenticatedAsync())
+		{
+			try
+			{
+				var termDto = ConvertToTermDTO(term);
+				await _apiService.UpdateTermAsync(term.Id, termDto);
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"Failed to sync term update to API: {ex.Message}");
+				// Continue even if API sync fails - local save succeeded
+			}
+		}
+		
 		await LoadTermsAsync();
 	}
 
 	public async Task DeleteTermAsync(AcademicTerm term)
 	{
+		// Delete locally first
 		await _db.DeleteTermAsync(term.Id);
+		
+		// Sync to API if authenticated
+		if (await _apiService.IsAuthenticatedAsync())
+		{
+			try
+			{
+				await _apiService.DeleteTermAsync(term.Id);
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"Failed to sync term deletion to API: {ex.Message}");
+				// Continue even if API sync fails - local delete succeeded
+			}
+		}
+		
 		Terms.Remove(term);
 	}
 
@@ -175,6 +239,19 @@ public partial class TermsViewModel : ObservableObject
 		{
 			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to send test notification: {ex.Message}", "OK");
 		}
+	}
+
+	private static TermDTO ConvertToTermDTO(AcademicTerm term)
+	{
+		return new TermDTO
+		{
+			Id = term.Id,
+			Title = term.Title,
+			StartDate = term.StartDate,
+			EndDate = term.EndDate,
+			CreatedAt = term.CreatedAt,
+			UpdatedAt = DateTime.UtcNow
+		};
 	}
 
 }

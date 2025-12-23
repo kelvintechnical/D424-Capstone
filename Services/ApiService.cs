@@ -729,4 +729,60 @@ public class ApiService
     }
 
     #endregion
+
+    #region Terms and Courses Methods
+
+    // Terms Methods
+    public async Task<ApiResponse<List<TermDTO>>> GetTermsAsync()
+    {
+        return await GetAsync<List<TermDTO>>("/api/terms");
+    }
+
+    public async Task<ApiResponse<TermDTO>> GetTermAsync(int id)
+    {
+        return await GetAsync<TermDTO>($"/api/terms/{id}");
+    }
+
+    public async Task<ApiResponse<TermDTO>> CreateTermAsync(TermDTO term)
+    {
+        return await PostAsync<TermDTO>("/api/terms", term);
+    }
+
+    public async Task<ApiResponse<TermDTO>> UpdateTermAsync(int id, TermDTO term)
+    {
+        return await PutAsync<TermDTO>($"/api/terms/{id}", term);
+    }
+
+    public async Task<ApiResponse<bool>> DeleteTermAsync(int id)
+    {
+        return await DeleteAsync<bool>($"/api/terms/{id}");
+    }
+
+    // Courses Methods
+    public async Task<ApiResponse<List<CourseDTO>>> GetCoursesByTermAsync(int termId)
+    {
+        return await GetAsync<List<CourseDTO>>($"/api/courses/term/{termId}");
+    }
+
+    public async Task<ApiResponse<CourseDTO>> GetCourseAsync(int id)
+    {
+        return await GetAsync<CourseDTO>($"/api/courses/{id}");
+    }
+
+    public async Task<ApiResponse<CourseDTO>> CreateCourseAsync(CourseDTO course)
+    {
+        return await PostAsync<CourseDTO>("/api/courses", course);
+    }
+
+    public async Task<ApiResponse<CourseDTO>> UpdateCourseAsync(int id, CourseDTO course)
+    {
+        return await PutAsync<CourseDTO>($"/api/courses/{id}", course);
+    }
+
+    public async Task<ApiResponse<bool>> DeleteCourseAsync(int id)
+    {
+        return await DeleteAsync<bool>($"/api/courses/{id}");
+    }
+
+    #endregion
 }

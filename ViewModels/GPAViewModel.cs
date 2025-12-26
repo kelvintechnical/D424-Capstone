@@ -183,6 +183,26 @@ public partial class GPAViewModel : ObservableObject
 			IsCalculatingProjection = false;
 		}
 	}
+
+	[RelayCommand]
+	private async Task GoBackAsync()
+	{
+		try
+		{
+			if (Shell.Current.Navigation.NavigationStack.Count > 1)
+			{
+				await Shell.Current.GoToAsync("..");
+			}
+			else
+			{
+				await Shell.Current.GoToAsync($"//{nameof(Views.TermsPage)}");
+			}
+		}
+		catch
+		{
+			await Shell.Current.GoToAsync($"//{nameof(Views.TermsPage)}");
+		}
+	}
 }
 
 public class CourseGradeInfo

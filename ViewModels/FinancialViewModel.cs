@@ -9,6 +9,7 @@ namespace StudentProgressTracker.ViewModels;
 public partial class FinancialViewModel : ObservableObject
 {
 	private readonly FinancialService _financialService;
+	private readonly ApiService _apiService;
 
 	[ObservableProperty] private FinancialSummaryDTO? summary;
 	[ObservableProperty] private ObservableCollection<IncomeDTO> recentIncomes = new();
@@ -17,9 +18,21 @@ public partial class FinancialViewModel : ObservableObject
 	[ObservableProperty] private DateTime startDate = DateTime.Now.AddMonths(-1);
 	[ObservableProperty] private DateTime endDate = DateTime.Now;
 
-	public FinancialViewModel(FinancialService financialService)
+	public FinancialViewModel(FinancialService financialService, ApiService apiService)
 	{
 		_financialService = financialService;
+		_apiService = apiService;
+		// Initialize Summary with default values to prevent null binding issues
+		Summary = new FinancialSummaryDTO
+		{
+			StartDate = StartDate,
+			EndDate = EndDate,
+			TotalIncome = 0,
+			TotalExpenses = 0,
+			NetAmount = 0,
+			IncomeCount = 0,
+			ExpenseCount = 0
+		};
 	}
 
 	[RelayCommand]
@@ -28,10 +41,47 @@ public partial class FinancialViewModel : ObservableObject
 		IsLoading = true;
 		try
 		{
-			// Load summary
-			Summary = await _financialService.GetFinancialSummaryAsync(StartDate, EndDate);
+			// Check if user is authenticated
+			if (!await _apiService.IsAuthenticatedAsync())
+			{
+				// Reset to default values if not authenticated
+				Summary = new FinancialSummaryDTO
+				{
+					StartDate = StartDate,
+					EndDate = EndDate,
+					TotalIncome = 0,
+					TotalExpenses = 0,
+					NetAmount = 0,
+					IncomeCount = 0,
+					ExpenseCount = 0
+				};
+				RecentIncomes.Clear();
+				RecentExpenses.Clear();
+				return;
+			}
 
-			// Load recent transactions
+			// Load summary from API
+			var summary = await _financialService.GetFinancialSummaryAsync(StartDate, EndDate);
+			if (summary != null)
+			{
+				Summary = summary;
+			}
+			else
+			{
+				// Initialize with default values if API returns null
+				Summary = new FinancialSummaryDTO
+				{
+					StartDate = StartDate,
+					EndDate = EndDate,
+					TotalIncome = 0,
+					TotalExpenses = 0,
+					NetAmount = 0,
+					IncomeCount = 0,
+					ExpenseCount = 0
+				};
+			}
+
+			// Load recent transactions from API
 			var incomes = await _financialService.GetIncomesAsync(StartDate, EndDate);
 			var expenses = await _financialService.GetExpensesAsync(StartDate, EndDate);
 
@@ -49,7 +99,20 @@ public partial class FinancialViewModel : ObservableObject
 		}
 		catch (Exception ex)
 		{
-			await Application.Current.MainPage.DisplayAlert("Error", $"Failed to load financial data: {ex.Message}", "OK");
+			System.Diagnostics.Debug.WriteLine($"Error loading financial data: {ex}");
+			// Initialize with default values on error
+			Summary = new FinancialSummaryDTO
+			{
+				StartDate = StartDate,
+				EndDate = EndDate,
+				TotalIncome = 0,
+				TotalExpenses = 0,
+				NetAmount = 0,
+				IncomeCount = 0,
+				ExpenseCount = 0
+			};
+			// Don't show alert for every error - just log it
+			// await Application.Current.MainPage.DisplayAlert("Error", $"Failed to load financial data: {ex.Message}", "OK");
 		}
 		finally
 		{

@@ -4,6 +4,7 @@ using StudentProgressTracker.Models;
 using StudentProgressTracker.Services;
 using StudentLifeTracker.Shared.DTOs;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace StudentProgressTracker.ViewModels;
 
@@ -42,12 +43,43 @@ public partial class CourseListViewModel : ObservableObject
 		try
 		{
 			Courses.Clear();
-			var list = await _db.GetCoursesByTermAsync(termId);
-			foreach (var c in list) Courses.Add(c);
+			
+			// Try to load from API first if authenticated
+			if (await _apiService.IsAuthenticatedAsync())
+			{
+				try
+				{
+					var response = await _apiService.GetCoursesByTermAsync(termId);
+					if (response.Success && response.Data != null)
+					{
+						foreach (var courseDto in response.Data)
+						{
+							var course = await ConvertToCourseAsync(courseDto);
+							Courses.Add(course);
+							// Also save to local database for offline access
+							await _db.SaveCourseAsync(course);
+						}
+						
+						var count = Courses.Count;
+						CanAddCourse = count < 6;
+						CourseCountDisplay = $"{count} of 6 courses";
+						return; // Successfully loaded from API
+					}
+				}
+				catch (Exception ex)
+				{
+					System.Diagnostics.Debug.WriteLine($"Failed to load courses from API: {ex.Message}");
+					// Fall through to load from local database
+				}
+			}
+			
+			// Fallback to local database if API fails or not authenticated
+			var localList = await _db.GetCoursesByTermAsync(termId);
+			foreach (var localCourse in localList) Courses.Add(localCourse);
 
-			var count = await _db.GetCourseCountByTermAsync(termId);
-			CanAddCourse = count < 6;
-			CourseCountDisplay = $"{count} of 6 courses";
+			var localCount = await _db.GetCourseCountByTermAsync(termId);
+			CanAddCourse = localCount < 6;
+			CourseCountDisplay = $"{localCount} of 6 courses";
 		}
 		finally
 		{
@@ -57,14 +89,12 @@ public partial class CourseListViewModel : ObservableObject
 
 	public async Task AddCourseAsync(Course course)
 	{
-		var count = await _db.GetCourseCountByTermAsync(course.TermId);
-		if (count >= 6) throw new InvalidOperationException("Cannot add more than 6 courses to a term.");
+		// Check course count from current collection or API
+		var currentCount = Courses.Count;
+		if (currentCount >= 6) throw new InvalidOperationException("Cannot add more than 6 courses to a term.");
 		if (!course.IsValid()) throw new InvalidOperationException("Invalid course");
 
-		// Save locally first
-		await _db.SaveCourseAsync(course);
-		
-		// Sync to API if authenticated
+		// Save to API first if authenticated
 		if (await _apiService.IsAuthenticatedAsync())
 		{
 			try
@@ -73,21 +103,35 @@ public partial class CourseListViewModel : ObservableObject
 				var response = await _apiService.CreateCourseAsync(courseDto);
 				if (response.Success && response.Data != null)
 				{
-					// Update local course with server ID if it was a new course
-					if (course.Id == 0 && response.Data.Id > 0)
-					{
-						course.Id = response.Data.Id;
-						await _db.SaveCourseAsync(course);
-					}
+					// Update course with server data
+					var updatedCourse = await ConvertToCourseAsync(response.Data);
+					course.Id = updatedCourse.Id;
+					course.Title = updatedCourse.Title;
+					course.StartDate = updatedCourse.StartDate;
+					course.EndDate = updatedCourse.EndDate;
+					course.Status = updatedCourse.Status;
+					course.InstructorId = updatedCourse.InstructorId;
+					course.Notes = updatedCourse.Notes;
+					course.NotificationsEnabled = updatedCourse.NotificationsEnabled;
+					course.CreditHours = updatedCourse.CreditHours;
+					course.CurrentGrade = updatedCourse.CurrentGrade;
+					course.LetterGrade = updatedCourse.LetterGrade;
+					course.CreatedAt = updatedCourse.CreatedAt;
+					// Save to local database for offline access
+					await _db.SaveCourseAsync(course);
+					await LoadCoursesAsync(course.TermId);
+					return; // Successfully saved to API
 				}
 			}
 			catch (Exception ex)
 			{
-				System.Diagnostics.Debug.WriteLine($"Failed to sync course to API: {ex.Message}");
-				// Continue even if API sync fails - local save succeeded
+				System.Diagnostics.Debug.WriteLine($"Failed to save course to API: {ex.Message}");
+				// Fall through to save locally
 			}
 		}
 		
+		// Fallback to local database if API fails or not authenticated
+		await _db.SaveCourseAsync(course);
 		Courses.Add(course);
 		await LoadCoursesAsync(course.TermId);
 	}
@@ -96,50 +140,77 @@ public partial class CourseListViewModel : ObservableObject
 	{
 		if (!course.IsValid()) throw new InvalidOperationException("Invalid course");
 		
-		// Save locally first
-		await _db.SaveCourseAsync(course);
-		
-		// Sync to API if authenticated
+		// Update in API first if authenticated
 		if (await _apiService.IsAuthenticatedAsync())
 		{
 			try
 			{
 				var courseDto = await ConvertToCourseDTOAsync(course);
-				await _apiService.UpdateCourseAsync(course.Id, courseDto);
+				var response = await _apiService.UpdateCourseAsync(course.Id, courseDto);
+				if (response.Success && response.Data != null)
+				{
+					// Update course with server data
+					var updatedCourse = await ConvertToCourseAsync(response.Data);
+					course.Title = updatedCourse.Title;
+					course.StartDate = updatedCourse.StartDate;
+					course.EndDate = updatedCourse.EndDate;
+					course.Status = updatedCourse.Status;
+					course.InstructorId = updatedCourse.InstructorId;
+					course.Notes = updatedCourse.Notes;
+					course.NotificationsEnabled = updatedCourse.NotificationsEnabled;
+					course.CreditHours = updatedCourse.CreditHours;
+					course.CurrentGrade = updatedCourse.CurrentGrade;
+					course.LetterGrade = updatedCourse.LetterGrade;
+					// Save to local database for offline access
+					await _db.SaveCourseAsync(course);
+					await LoadCoursesAsync(course.TermId);
+					return; // Successfully updated in API
+				}
 			}
 			catch (Exception ex)
 			{
-				System.Diagnostics.Debug.WriteLine($"Failed to sync course update to API: {ex.Message}");
-				// Continue even if API sync fails - local save succeeded
+				System.Diagnostics.Debug.WriteLine($"Failed to update course in API: {ex.Message}");
+				// Fall through to save locally
 			}
 		}
 		
+		// Fallback to local database if API fails or not authenticated
+		await _db.SaveCourseAsync(course);
 		await LoadCoursesAsync(course.TermId);
 	}
 
 	public async Task DeleteCourseAsync(Course course)
 	{
-		// Delete locally first
-		await _db.DeleteCourseAsync(course.Id);
-		
-		// Sync to API if authenticated
+		// Delete from API first if authenticated
 		if (await _apiService.IsAuthenticatedAsync() && course.Id > 0)
 		{
 			try
 			{
-				await _apiService.DeleteCourseAsync(course.Id);
+				var response = await _apiService.DeleteCourseAsync(course.Id);
+				if (response.Success)
+				{
+					// Also delete from local database
+					await _db.DeleteCourseAsync(course.Id);
+					Courses.Remove(course);
+					var count = Courses.Count;
+					CanAddCourse = count < 6;
+					CourseCountDisplay = $"{count} of 6 courses";
+					return; // Successfully deleted from API
+				}
 			}
 			catch (Exception ex)
 			{
-				System.Diagnostics.Debug.WriteLine($"Failed to sync course deletion to API: {ex.Message}");
-				// Continue even if API sync fails - local delete succeeded
+				System.Diagnostics.Debug.WriteLine($"Failed to delete course from API: {ex.Message}");
+				// Fall through to delete locally
 			}
 		}
 		
+		// Fallback to local database if API fails or not authenticated
+		await _db.DeleteCourseAsync(course.Id);
 		Courses.Remove(course);
-		var count = await _db.GetCourseCountByTermAsync(course.TermId);
-		CanAddCourse = count < 6;
-		CourseCountDisplay = $"{count} of 6 courses";
+		var finalCount = Courses.Count;
+		CanAddCourse = finalCount < 6;
+		CourseCountDisplay = $"{finalCount} of 6 courses";
 	}
 
 	public void SetCurrentTerm(AcademicTerm term)
@@ -269,6 +340,49 @@ public partial class CourseListViewModel : ObservableObject
 			LetterGrade = course.LetterGrade,
 			CreatedAt = course.CreatedAt,
 			UpdatedAt = DateTime.UtcNow
+		};
+	}
+
+	private async Task<Course> ConvertToCourseAsync(CourseDTO courseDto)
+	{
+		// Find or create instructor in local database
+		Instructor? instructor = null;
+		if (!string.IsNullOrWhiteSpace(courseDto.InstructorEmail))
+		{
+			// Try to find existing instructor by email
+			var allInstructors = await _db.GetAllInstructorsAsync();
+			instructor = allInstructors.FirstOrDefault(i => 
+				i.Email.Equals(courseDto.InstructorEmail, StringComparison.OrdinalIgnoreCase));
+		}
+		
+		// Create instructor if not found
+		if (instructor == null)
+		{
+			instructor = new Instructor
+			{
+				Name = courseDto.InstructorName ?? "Unknown",
+				Phone = courseDto.InstructorPhone ?? "000-000-0000",
+				Email = courseDto.InstructorEmail ?? "instructor@example.com"
+			};
+			await _db.SaveInstructorAsync(instructor);
+		}
+
+		return new Course
+		{
+			Id = courseDto.Id,
+			TermId = courseDto.TermId,
+			Title = courseDto.Title,
+			StartDate = courseDto.StartDate,
+			EndDate = courseDto.EndDate,
+			Status = courseDto.Status,
+			InstructorId = instructor.Id,
+			Notes = courseDto.Notes,
+			NotificationsEnabled = courseDto.NotificationsEnabled,
+			CreditHours = courseDto.CreditHours,
+			CurrentGrade = courseDto.CurrentGrade,
+			LetterGrade = courseDto.LetterGrade,
+			CreatedAt = courseDto.CreatedAt,
+			Instructor = instructor
 		};
 	}
 }

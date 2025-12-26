@@ -5,6 +5,7 @@ using StudentProgressTracker.Services;
 using StudentLifeTracker.Shared.DTOs;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Reflection;
 
 namespace StudentProgressTracker.ViewModels;
@@ -71,11 +72,38 @@ public partial class CourseDetailViewModel : ObservableObject
 		IsLoading = true;
 		try
 		{
-			var c = await _db.GetCourseAsync(courseId);
-			if (c is null) return;
-			Course = c;
+			// Try to load from API first if authenticated
+			if (await _apiService.IsAuthenticatedAsync())
+			{
+				try
+				{
+					var response = await _apiService.GetCourseAsync(courseId);
+					if (response.Success && response.Data != null)
+					{
+						var courseDto = response.Data;
+						var c = await ConvertToCourseAsync(courseDto);
+						Course = c;
+						await LoadAssessmentsAsync(courseId);
+						Instructor = c.Instructor;
+						MapCourseToProperties();
+						// Also save to local database for offline access
+						await _db.SaveCourseAsync(c);
+						return; // Successfully loaded from API
+					}
+				}
+				catch (Exception ex)
+				{
+					System.Diagnostics.Debug.WriteLine($"Failed to load course from API: {ex.Message}");
+					// Fall through to load from local database
+				}
+			}
+			
+			// Fallback to local database if API fails or not authenticated
+			var localCourse = await _db.GetCourseAsync(courseId);
+			if (localCourse is null) return;
+			Course = localCourse;
 			await LoadAssessmentsAsync(courseId);
-			Instructor = c.Instructor;
+			Instructor = localCourse.Instructor;
 			MapCourseToProperties();
 		}
 		finally
@@ -164,14 +192,7 @@ public partial class CourseDetailViewModel : ObservableObject
 			await _db.SaveInstructorAsync(Instructor);
 			Course.InstructorId = Instructor.Id;
 			
-			// Save locally first - capture the returned ID for new courses
-			var savedId = await _db.SaveCourseAsync(Course);
-			if (Course.Id == 0 && savedId > 0)
-			{
-				Course.Id = savedId;
-			}
-
-			// Sync to API if authenticated
+			// Save to API first if authenticated
 			if (await _apiService.IsAuthenticatedAsync())
 			{
 				try
@@ -201,8 +222,20 @@ public partial class CourseDetailViewModel : ObservableObject
 						var response = await _apiService.CreateCourseAsync(courseDto);
 						if (response.Success && response.Data != null && response.Data.Id > 0)
 						{
-							Course.Id = response.Data.Id;
-							await _db.SaveCourseAsync(Course);
+							// Update course with server data
+							var updatedCourse = await ConvertToCourseAsync(response.Data);
+							Course.Id = updatedCourse.Id;
+							Course.Title = updatedCourse.Title;
+							Course.StartDate = updatedCourse.StartDate;
+							Course.EndDate = updatedCourse.EndDate;
+							Course.Status = updatedCourse.Status;
+							Course.InstructorId = updatedCourse.InstructorId;
+							Course.Notes = updatedCourse.Notes;
+							Course.NotificationsEnabled = updatedCourse.NotificationsEnabled;
+							Course.CreditHours = updatedCourse.CreditHours;
+							Course.CurrentGrade = updatedCourse.CurrentGrade;
+							Course.LetterGrade = updatedCourse.LetterGrade;
+							Course.CreatedAt = updatedCourse.CreatedAt;
 							apiSyncSuccess = true;
 						}
 						else
@@ -213,8 +246,23 @@ public partial class CourseDetailViewModel : ObservableObject
 					else
 					{
 						var response = await _apiService.UpdateCourseAsync(Course.Id, courseDto);
-						apiSyncSuccess = response.Success;
-						if (!apiSyncSuccess)
+						if (response.Success && response.Data != null)
+						{
+							// Update course with server data
+							var updatedCourse = await ConvertToCourseAsync(response.Data);
+							Course.Title = updatedCourse.Title;
+							Course.StartDate = updatedCourse.StartDate;
+							Course.EndDate = updatedCourse.EndDate;
+							Course.Status = updatedCourse.Status;
+							Course.InstructorId = updatedCourse.InstructorId;
+							Course.Notes = updatedCourse.Notes;
+							Course.NotificationsEnabled = updatedCourse.NotificationsEnabled;
+							Course.CreditHours = updatedCourse.CreditHours;
+							Course.CurrentGrade = updatedCourse.CurrentGrade;
+							Course.LetterGrade = updatedCourse.LetterGrade;
+							apiSyncSuccess = true;
+						}
+						else
 						{
 							System.Diagnostics.Debug.WriteLine($"Failed to update course in API: {response.Message}");
 						}
@@ -226,6 +274,9 @@ public partial class CourseDetailViewModel : ObservableObject
 					apiSyncSuccess = false;
 				}
 			}
+			
+			// Save to local database for offline access (or if API failed)
+			await _db.SaveCourseAsync(Course);
 
 			// Schedule notifications for course start/end using the exact user-selected times
 			await _notifications.ScheduleCourseNotificationsAsync(
@@ -247,22 +298,28 @@ public partial class CourseDetailViewModel : ObservableObject
 	{
 		if (Course is null) return;
 		
-		// Delete locally first
-		await _db.DeleteCourseAsync(Course.Id);
-		
-		// Sync to API if authenticated
+		// Delete from API first if authenticated
 		if (await _apiService.IsAuthenticatedAsync() && Course.Id > 0)
 		{
 			try
 			{
-				await _apiService.DeleteCourseAsync(Course.Id);
+				var response = await _apiService.DeleteCourseAsync(Course.Id);
+				if (response.Success)
+				{
+					// Also delete from local database
+					await _db.DeleteCourseAsync(Course.Id);
+					return; // Successfully deleted from API
+				}
 			}
 			catch (Exception ex)
 			{
-				System.Diagnostics.Debug.WriteLine($"Failed to sync course deletion to API: {ex.Message}");
-				// Continue even if API sync fails - local delete succeeded
+				System.Diagnostics.Debug.WriteLine($"Failed to delete course from API: {ex.Message}");
+				// Fall through to delete locally
 			}
 		}
+		
+		// Fallback to local database if API fails or not authenticated
+		await _db.DeleteCourseAsync(Course.Id);
 	}
 
 	[RelayCommand]
@@ -567,6 +624,49 @@ public partial class CourseDetailViewModel : ObservableObject
 		}
 		// Fallback: try to parse as enum name
 		return Enum.TryParse<TEnum>(displayName, out var result) ? result : default;
+	}
+
+	private async Task<Course> ConvertToCourseAsync(CourseDTO courseDto)
+	{
+		// Find or create instructor in local database
+		Instructor? instructor = null;
+		if (!string.IsNullOrWhiteSpace(courseDto.InstructorEmail))
+		{
+			// Try to find existing instructor by email
+			var allInstructors = await _db.GetAllInstructorsAsync();
+			instructor = allInstructors.FirstOrDefault(i => 
+				i.Email.Equals(courseDto.InstructorEmail, StringComparison.OrdinalIgnoreCase));
+		}
+		
+		// Create instructor if not found
+		if (instructor == null)
+		{
+			instructor = new Instructor
+			{
+				Name = courseDto.InstructorName ?? "Unknown",
+				Phone = courseDto.InstructorPhone ?? "000-000-0000",
+				Email = courseDto.InstructorEmail ?? "instructor@example.com"
+			};
+			await _db.SaveInstructorAsync(instructor);
+		}
+
+		return new Course
+		{
+			Id = courseDto.Id,
+			TermId = courseDto.TermId,
+			Title = courseDto.Title,
+			StartDate = courseDto.StartDate,
+			EndDate = courseDto.EndDate,
+			Status = courseDto.Status,
+			InstructorId = instructor.Id,
+			Notes = courseDto.Notes,
+			NotificationsEnabled = courseDto.NotificationsEnabled,
+			CreditHours = courseDto.CreditHours,
+			CurrentGrade = courseDto.CurrentGrade,
+			LetterGrade = courseDto.LetterGrade,
+			CreatedAt = courseDto.CreatedAt,
+			Instructor = instructor
+		};
 	}
 }
 

@@ -35,19 +35,53 @@ public partial class TermDetailViewModel : ObservableObject
 		IsLoading = true;
 		try
 		{
-			var t = await _db.GetTermAsync(termId);
-			if (t is null) return;
-			Term = t;
-			Title = t.Title;
-			var localStartDate = ConvertUtcToLocal(t.StartDate);
-			var localEndDate = ConvertUtcToLocal(t.EndDate);
+			// Try to load from API first if authenticated
+			if (await _apiService.IsAuthenticatedAsync())
+			{
+				try
+				{
+					var response = await _apiService.GetTermAsync(termId);
+					if (response.Success && response.Data != null)
+					{
+						var termDto = response.Data;
+						var t = ConvertToAcademicTerm(termDto);
+						Term = t;
+						Title = t.Title;
+						var localStartDate = ConvertUtcToLocal(t.StartDate);
+						var localEndDate = ConvertUtcToLocal(t.EndDate);
+						
+						// Store as previous valid dates
+						_previousValidStartDate = localStartDate;
+						_previousValidEndDate = localEndDate;
+						
+						StartDate = localStartDate;
+						EndDate = localEndDate;
+						// Also save to local database for offline access
+						await _db.SaveTermAsync(t);
+						return; // Successfully loaded from API
+					}
+				}
+				catch (Exception ex)
+				{
+					System.Diagnostics.Debug.WriteLine($"Failed to load term from API: {ex.Message}");
+					// Fall through to load from local database
+				}
+			}
+			
+			// Fallback to local database if API fails or not authenticated
+			var localTerm = await _db.GetTermAsync(termId);
+			if (localTerm is null) return;
+			Term = localTerm;
+			Title = localTerm.Title;
+			var fallbackStartDate = ConvertUtcToLocal(localTerm.StartDate);
+			var fallbackEndDate = ConvertUtcToLocal(localTerm.EndDate);
 			
 			// Store as previous valid dates
-			_previousValidStartDate = localStartDate;
-			_previousValidEndDate = localEndDate;
+			_previousValidStartDate = fallbackStartDate;
+			_previousValidEndDate = fallbackEndDate;
 			
-			StartDate = localStartDate;
-			EndDate = localEndDate;
+			StartDate = fallbackStartDate;
+			EndDate = fallbackEndDate;
 		}
 		finally
 		{
@@ -75,10 +109,7 @@ public partial class TermDetailViewModel : ObservableObject
 			MapPropertiesToTerm();
 			if (!Term.IsValid()) throw new InvalidOperationException("Invalid term. End date must be after start date.");
 			
-			// Save locally first
-			await _db.SaveTermAsync(Term);
-			
-			// Sync to API if authenticated
+			// Save to API first if authenticated
 			if (await _apiService.IsAuthenticatedAsync())
 			{
 				try
@@ -98,21 +129,35 @@ public partial class TermDetailViewModel : ObservableObject
 						var response = await _apiService.CreateTermAsync(termDto);
 						if (response.Success && response.Data != null && response.Data.Id > 0)
 						{
+							// Update term with server data
 							Term.Id = response.Data.Id;
-							await _db.SaveTermAsync(Term);
+							Term.Title = response.Data.Title;
+							Term.StartDate = response.Data.StartDate;
+							Term.EndDate = response.Data.EndDate;
+							Term.CreatedAt = response.Data.CreatedAt;
 						}
 					}
 					else
 					{
-						await _apiService.UpdateTermAsync(Term.Id, termDto);
+						var response = await _apiService.UpdateTermAsync(Term.Id, termDto);
+						if (response.Success && response.Data != null)
+						{
+							// Update term with server data
+							Term.Title = response.Data.Title;
+							Term.StartDate = response.Data.StartDate;
+							Term.EndDate = response.Data.EndDate;
+						}
 					}
 				}
 				catch (Exception ex)
 				{
-					System.Diagnostics.Debug.WriteLine($"Failed to sync term to API: {ex.Message}");
-					// Continue even if API sync fails - local save succeeded
+					System.Diagnostics.Debug.WriteLine($"Failed to save term to API: {ex.Message}");
+					// Fall through to save locally
 				}
 			}
+			
+			// Save to local database for offline access (or if API failed)
+			await _db.SaveTermAsync(Term);
 		}
 		finally
 		{
@@ -124,22 +169,28 @@ public partial class TermDetailViewModel : ObservableObject
 	{
 		if (Term is null) return;
 		
-		// Delete locally first
-		await _db.DeleteTermAsync(Term.Id);
-		
-		// Sync to API if authenticated
+		// Delete from API first if authenticated
 		if (await _apiService.IsAuthenticatedAsync() && Term.Id > 0)
 		{
 			try
 			{
-				await _apiService.DeleteTermAsync(Term.Id);
+				var response = await _apiService.DeleteTermAsync(Term.Id);
+				if (response.Success)
+				{
+					// Also delete from local database
+					await _db.DeleteTermAsync(Term.Id);
+					return; // Successfully deleted from API
+				}
 			}
 			catch (Exception ex)
 			{
-				System.Diagnostics.Debug.WriteLine($"Failed to sync term deletion to API: {ex.Message}");
-				// Continue even if API sync fails - local delete succeeded
+				System.Diagnostics.Debug.WriteLine($"Failed to delete term from API: {ex.Message}");
+				// Fall through to delete locally
 			}
 		}
+		
+		// Fallback to local database if API fails or not authenticated
+		await _db.DeleteTermAsync(Term.Id);
 	}
 
 	[RelayCommand]
@@ -270,6 +321,18 @@ public partial class TermDetailViewModel : ObservableObject
 			EndDateError = string.Empty;
 			_previousValidEndDate = value;
 		}
+	}
+
+	private static AcademicTerm ConvertToAcademicTerm(TermDTO termDto)
+	{
+		return new AcademicTerm
+		{
+			Id = termDto.Id,
+			Title = termDto.Title,
+			StartDate = termDto.StartDate,
+			EndDate = termDto.EndDate,
+			CreatedAt = termDto.CreatedAt
+		};
 	}
 }
 

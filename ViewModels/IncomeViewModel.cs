@@ -14,11 +14,22 @@ public partial class IncomeViewModel : ObservableObject
 	[ObservableProperty] private IncomeDTO? selectedIncome;
 	[ObservableProperty] private bool isLoading;
 	[ObservableProperty] private bool isEditing;
-	[ObservableProperty] private decimal amount;
+	[ObservableProperty] private string amountText = string.Empty;
 	[ObservableProperty] private string source = string.Empty;
 	[ObservableProperty] private DateTime date = DateTime.Today;
 	[ObservableProperty] private DateTime? startDate;
 	[ObservableProperty] private DateTime? endDate;
+
+	private decimal Amount
+	{
+		get
+		{
+			if (decimal.TryParse(AmountText, out var result))
+				return result;
+			return 0;
+		}
+		set => AmountText = value.ToString("F2");
+	}
 
 	public IncomeViewModel(FinancialService financialService)
 	{
@@ -52,7 +63,7 @@ public partial class IncomeViewModel : ObservableObject
 	public void StartNewIncome()
 	{
 		SelectedIncome = null;
-		Amount = 0;
+		AmountText = string.Empty;
 		Source = string.Empty;
 		Date = DateTime.Today;
 		IsEditing = true;
@@ -62,7 +73,7 @@ public partial class IncomeViewModel : ObservableObject
 	public void EditIncome(IncomeDTO income)
 	{
 		SelectedIncome = income;
-		Amount = income.Amount;
+		AmountText = income.Amount.ToString("F2");
 		Source = income.Source;
 		Date = income.Date;
 		IsEditing = true;

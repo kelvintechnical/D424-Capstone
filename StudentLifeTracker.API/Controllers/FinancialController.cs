@@ -46,12 +46,16 @@ public class FinancialController : ControllerBase
 
             if (startDate.HasValue)
             {
-                query = query.Where(i => i.Date >= startDate.Value);
+                // Normalize to start of day
+                var start = startDate.Value.Date;
+                query = query.Where(i => i.Date >= start);
             }
 
             if (endDate.HasValue)
             {
-                query = query.Where(i => i.Date <= endDate.Value);
+                // Normalize to end of day
+                var end = endDate.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(i => i.Date <= end);
             }
 
             var incomes = await query
@@ -259,12 +263,16 @@ public class FinancialController : ControllerBase
 
             if (startDate.HasValue)
             {
-                query = query.Where(e => e.Date >= startDate.Value);
+                // Normalize to start of day
+                var start = startDate.Value.Date;
+                query = query.Where(e => e.Date >= start);
             }
 
             if (endDate.HasValue)
             {
-                query = query.Where(e => e.Date <= endDate.Value);
+                // Normalize to end of day
+                var end = endDate.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(e => e.Date <= end);
             }
 
             if (categoryId.HasValue)
@@ -723,8 +731,13 @@ public class FinancialController : ControllerBase
                 return Unauthorized(ApiResponse<FinancialSummaryDTO>.ErrorResponse("User not authenticated."));
             }
 
-            var start = startDate ?? DateTime.UtcNow.AddMonths(-1);
-            var end = endDate ?? DateTime.UtcNow;
+            // Normalize dates: start at beginning of day, end at end of day
+            var start = startDate.HasValue 
+                ? startDate.Value.Date 
+                : DateTime.UtcNow.AddMonths(-1).Date;
+            var end = endDate.HasValue 
+                ? endDate.Value.Date.AddDays(1).AddTicks(-1) // End of the day (23:59:59.9999999)
+                : DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
 
             var totalIncome = await _context.Incomes
                 .Where(i => i.UserId == userId && i.Date >= start && i.Date <= end)

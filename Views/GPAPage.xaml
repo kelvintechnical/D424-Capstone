@@ -78,8 +78,10 @@
                         <VerticalStackLayout Spacing="4">
                             <Label Text="Current Grade (%)" />
                             <Entry Text="{Binding CurrentGradeInput}" 
-                                   Keyboard="Numeric" 
-                                   Placeholder="0-100" />
+                                   IsReadOnly="True"
+                                   IsEnabled="True"
+                                   BackgroundColor="#E0E0E0"
+                                   Placeholder="Select a course" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="1" Spacing="4">
                             <Label Text="Final Weight" />

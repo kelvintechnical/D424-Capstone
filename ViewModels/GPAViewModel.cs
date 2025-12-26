@@ -105,6 +105,16 @@ public partial class GPAViewModel : ObservableObject
 		{
 			CurrentGradeInput = value.Percentage.Value.ToString("F1");
 		}
+		else if (value != null)
+		{
+			// Course selected but no grade recorded yet
+			CurrentGradeInput = string.Empty;
+		}
+		else
+		{
+			// No course selected
+			CurrentGradeInput = string.Empty;
+		}
 	}
 
 	[RelayCommand]
@@ -116,9 +126,19 @@ public partial class GPAViewModel : ObservableObject
 			return;
 		}
 
-		if (!double.TryParse(CurrentGradeInput, out var currentGrade) || currentGrade < 0 || currentGrade > 100)
+		// Use the actual grade from the selected course
+		if (!SelectedCourse.Percentage.HasValue)
 		{
-			await Application.Current.MainPage.DisplayAlert("Error", "Please enter a valid current grade (0-100)", "OK");
+			await Application.Current.MainPage.DisplayAlert("Error", "The selected course does not have a grade recorded yet. Please record a grade first.", "OK");
+			return;
+		}
+
+		var currentGrade = (double)SelectedCourse.Percentage.Value;
+		
+		// Validate the grade is in valid range (should always be if from API, but double-check)
+		if (currentGrade < 0 || currentGrade > 100)
+		{
+			await Application.Current.MainPage.DisplayAlert("Error", "The course grade is invalid (must be 0-100)", "OK");
 			return;
 		}
 

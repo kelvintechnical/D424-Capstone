@@ -253,72 +253,63 @@ public partial class CourseDetailViewModel : ObservableObject
 					
 					System.Diagnostics.Debug.WriteLine($"Saving course to API - TermId: {apiTermId}, CourseId: {Course.Id}, Title: {Course.Title}");
 					
+					ApiResponse<CourseDTO>? response = null;
+					
 					if (Course.Id == 0)
 					{
-						var response = await _apiService.CreateCourseAsync(courseDto);
-						if (response.Success && response.Data != null && response.Data.Id > 0)
-						{
-							// Update course with server data
-							var updatedCourse = await ConvertToCourseAsync(response.Data);
-							Course.Id = updatedCourse.Id;
-							Course.Title = updatedCourse.Title;
-							Course.StartDate = updatedCourse.StartDate;
-							Course.EndDate = updatedCourse.EndDate;
-							Course.Status = updatedCourse.Status;
-							Course.InstructorId = updatedCourse.InstructorId;
-							Course.Notes = updatedCourse.Notes;
-							Course.NotificationsEnabled = updatedCourse.NotificationsEnabled;
-							Course.CreditHours = updatedCourse.CreditHours;
-							Course.CurrentGrade = updatedCourse.CurrentGrade;
-							Course.LetterGrade = updatedCourse.LetterGrade;
-							Course.CreatedAt = updatedCourse.CreatedAt;
-							apiSyncSuccess = true;
-							System.Diagnostics.Debug.WriteLine($"Successfully created course in API with ID: {Course.Id}");
-						}
-						else
-						{
-							System.Diagnostics.Debug.WriteLine($"Failed to create course in API:");
-							System.Diagnostics.Debug.WriteLine($"  Message: {response.Message}");
-							System.Diagnostics.Debug.WriteLine($"  Success: {response.Success}");
-							System.Diagnostics.Debug.WriteLine($"  CourseDTO TermId: {courseDto.TermId}");
-							System.Diagnostics.Debug.WriteLine($"  CourseDTO Title: {courseDto.Title}");
-							if (response.Errors != null && response.Errors.Any())
-							{
-								System.Diagnostics.Debug.WriteLine($"  Errors: {string.Join(", ", response.Errors)}");
-							}
-						}
+						// New course - create it
+						response = await _apiService.CreateCourseAsync(courseDto);
 					}
 					else
 					{
-						var response = await _apiService.UpdateCourseAsync(Course.Id, courseDto);
-						if (response.Success && response.Data != null)
+						// Existing course - try to update first
+						response = await _apiService.UpdateCourseAsync(Course.Id, courseDto);
+						
+						// If course doesn't exist in API, create it instead
+						if (!response.Success && response.Message?.Contains("not found", StringComparison.OrdinalIgnoreCase) == true)
 						{
-							// Update course with server data
-							var updatedCourse = await ConvertToCourseAsync(response.Data);
-							Course.Title = updatedCourse.Title;
-							Course.StartDate = updatedCourse.StartDate;
-							Course.EndDate = updatedCourse.EndDate;
-							Course.Status = updatedCourse.Status;
-							Course.InstructorId = updatedCourse.InstructorId;
-							Course.Notes = updatedCourse.Notes;
-							Course.NotificationsEnabled = updatedCourse.NotificationsEnabled;
-							Course.CreditHours = updatedCourse.CreditHours;
-							Course.CurrentGrade = updatedCourse.CurrentGrade;
-							Course.LetterGrade = updatedCourse.LetterGrade;
-							apiSyncSuccess = true;
-							System.Diagnostics.Debug.WriteLine($"Successfully updated course in API with ID: {Course.Id}");
+							System.Diagnostics.Debug.WriteLine($"Course not found in API (ID: {Course.Id}), creating new course instead");
+							courseDto.Id = 0; // Reset ID for creation
+							response = await _apiService.CreateCourseAsync(courseDto);
 						}
-						else
+					}
+					
+					if (response != null && response.Success && response.Data != null)
+					{
+						// Update course with server data
+						var updatedCourse = await ConvertToCourseAsync(response.Data);
+						
+						// If this was a create operation, update the local course ID
+						if (Course.Id == 0 || Course.Id != updatedCourse.Id)
 						{
-							System.Diagnostics.Debug.WriteLine($"Failed to update course in API:");
-							System.Diagnostics.Debug.WriteLine($"  Message: {response.Message}");
-							System.Diagnostics.Debug.WriteLine($"  Success: {response.Success}");
-							System.Diagnostics.Debug.WriteLine($"  CourseDTO TermId: {courseDto.TermId}");
-							System.Diagnostics.Debug.WriteLine($"  CourseDTO Title: {courseDto.Title}");
-							if (response.Errors != null && response.Errors.Any())
-							{
-								System.Diagnostics.Debug.WriteLine($"  Errors: {string.Join(", ", response.Errors)}");
-							}
+							Course.Id = updatedCourse.Id;
+							System.Diagnostics.Debug.WriteLine($"Course synced to API with new ID: {Course.Id}");
+						}
+						
+						Course.Title = updatedCourse.Title;
+						Course.StartDate = updatedCourse.StartDate;
+						Course.EndDate = updatedCourse.EndDate;
+						Course.Status = updatedCourse.Status;
+						Course.InstructorId = updatedCourse.InstructorId;
+						Course.Notes = updatedCourse.Notes;
+						Course.NotificationsEnabled = updatedCourse.NotificationsEnabled;
+						Course.CreditHours = updatedCourse.CreditHours;
+						Course.CurrentGrade = updatedCourse.CurrentGrade;
+						Course.LetterGrade = updatedCourse.LetterGrade;
+						Course.CreatedAt = updatedCourse.CreatedAt;
+						apiSyncSuccess = true;
+						System.Diagnostics.Debug.WriteLine($"Successfully saved course in API with ID: {Course.Id}");
+					}
+					else if (response != null)
+					{
+						System.Diagnostics.Debug.WriteLine($"Failed to save course in API:");
+						System.Diagnostics.Debug.WriteLine($"  Message: {response.Message}");
+						System.Diagnostics.Debug.WriteLine($"  Success: {response.Success}");
+						System.Diagnostics.Debug.WriteLine($"  CourseDTO TermId: {courseDto.TermId}");
+						System.Diagnostics.Debug.WriteLine($"  CourseDTO Title: {courseDto.Title}");
+						if (response.Errors != null && response.Errors.Any())
+						{
+							System.Diagnostics.Debug.WriteLine($"  Errors: {string.Join(", ", response.Errors)}");
 						}
 					}
 				}

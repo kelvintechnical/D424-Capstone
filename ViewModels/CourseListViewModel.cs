@@ -173,10 +173,27 @@ public partial class CourseListViewModel : ObservableObject
 				System.Diagnostics.Debug.WriteLine($"Updating course in API - TermId: {apiTermId} (mapped from local {course.TermId}), CourseId: {course.Id}");
 				
 				var response = await _apiService.UpdateCourseAsync(course.Id, courseDto);
+				
+				// If course doesn't exist in API, create it instead
+				if (!response.Success && response.Message?.Contains("not found", StringComparison.OrdinalIgnoreCase) == true)
+				{
+					System.Diagnostics.Debug.WriteLine($"Course not found in API (ID: {course.Id}), creating new course instead");
+					courseDto.Id = 0; // Reset ID for creation
+					response = await _apiService.CreateCourseAsync(courseDto);
+				}
+				
 				if (response.Success && response.Data != null)
 				{
 					// Update course with server data
 					var updatedCourse = await ConvertToCourseAsync(response.Data);
+					
+					// If this was a create operation, update the local course ID
+					if (course.Id == 0 || course.Id != updatedCourse.Id)
+					{
+						course.Id = updatedCourse.Id;
+						System.Diagnostics.Debug.WriteLine($"Course synced to API with new ID: {course.Id}");
+					}
+					
 					course.Title = updatedCourse.Title;
 					course.StartDate = updatedCourse.StartDate;
 					course.EndDate = updatedCourse.EndDate;
@@ -190,11 +207,11 @@ public partial class CourseListViewModel : ObservableObject
 					// Save to local database for offline access
 					await _db.SaveCourseAsync(course);
 					await LoadCoursesAsync(course.TermId);
-					return; // Successfully updated in API
+					return; // Successfully saved in API
 				}
 				else
 				{
-					System.Diagnostics.Debug.WriteLine($"Failed to update course in API:");
+					System.Diagnostics.Debug.WriteLine($"Failed to save course in API:");
 					System.Diagnostics.Debug.WriteLine($"  Message: {response.Message}");
 					System.Diagnostics.Debug.WriteLine($"  Success: {response.Success}");
 					System.Diagnostics.Debug.WriteLine($"  CourseDTO TermId: {courseDto.TermId}");

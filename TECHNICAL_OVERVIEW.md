@@ -348,6 +348,7 @@ The application follows a **3-tier client-server architecture**:
 #### Summary Endpoint
 - `GET /summary` - Get financial summary (optional: startDate, endDate query parameters)
   - Returns: TotalIncome, TotalExpenses, NetAmount, IncomeCount, ExpenseCount
+  - Date filtering: Dates are normalized to include full day ranges (start of day to end of day) to ensure all records within the selected dates are included in calculations
 
 **API Features**
 - JWT authorization on all endpoints (except authentication endpoints)
@@ -413,7 +414,7 @@ The application follows a **3-tier client-server architecture**:
 ```
 
 **Client Configuration**
-- API base URL (currently hardcoded: https://localhost:7119)
+- API base URL: `https://spt-api-v2-defjczgvg9bgbcaw.eastus2-01.azurewebsites.net` (Azure-hosted)
 - SQLite database path (app data directory)
 - Platform-specific notification settings
 
@@ -603,6 +604,8 @@ The financial tracking feature is fully implemented with:
 - ✅ Expense tracking with category management
 - ✅ Category management (CRUD operations)
 - ✅ Financial summary with date range filtering
+- ✅ Delete functionality for income and expense entries
+- ✅ Fixed date filtering to properly include all records within selected date ranges (normalized to start/end of day)
 - ⏳ Future enhancements could include:
   - Budget planning and alerts
   - Advanced financial reports and analytics
@@ -898,8 +901,25 @@ This document provides a comprehensive technical overview suitable for due dilig
 
 ---
 
-*Document Version: 1.0*  
-*Last Updated: December 19, 2025*  
+## Recent Updates (December 2025)
+
+### Financial Module Enhancements
+- **Date Filtering Fix**: Fixed date range filtering in Financial API endpoints to properly normalize dates (start of day to end of day) ensuring all records within selected date ranges are included in calculations
+- **Delete Functionality**: Added delete buttons and functionality for Income and Expense entries in the client UI
+- **Auto-Refresh**: Financial Overview page automatically refreshes when navigating back to it via `OnAppearing` lifecycle method
+
+### API Configuration
+- **Production Deployment**: API is now deployed to Azure App Service at `https://spt-api-v2-defjczgvg9bgbcaw.eastus2-01.azurewebsites.net`
+- **Client Configuration**: Client application configured to use Azure-hosted API by default
+
+### Bug Fixes
+- Fixed date comparison logic in `GetSummary`, `GetIncomes`, and `GetExpenses` endpoints to handle date-only queries correctly
+- Improved error handling and user feedback for financial operations
+
+---
+
+*Document Version: 1.1*  
+*Last Updated: December 26, 2025*  
 *Created for: Potential purchaser technical evaluation*
 
 

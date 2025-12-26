@@ -28,6 +28,14 @@ public partial class ExpensePage : ContentPage
 		}
 	}
 
+	private void DeleteExpense_Clicked(object sender, EventArgs e)
+	{
+		if (sender is Button button && button.CommandParameter is ExpenseDTO expense && BindingContext is ExpenseViewModel vm)
+		{
+			vm.DeleteExpenseCommand.Execute(expense);
+		}
+	}
+
 	private void CategoryPicker_SelectedIndexChanged(object sender, EventArgs e)
 	{
 		if (sender is Picker picker && picker.SelectedItem is CategoryDTO category && BindingContext is ExpenseViewModel vm)

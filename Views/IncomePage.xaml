@@ -54,7 +54,7 @@
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="dto:IncomeDTO">
                             <Frame Padding="12" Margin="0,4" HasShadow="False" BorderColor="{StaticResource Gray200}">
-                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="12">
                                     <VerticalStackLayout>
                                         <Label Text="{Binding Source}" FontAttributes="Bold" />
                                         <Label Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}" 
@@ -68,6 +68,13 @@
                                             Text="Edit" 
                                             Clicked="EditIncome_Clicked"
                                             CommandParameter="{Binding .}" />
+                                    <Button Grid.Column="3" 
+                                            Text="🗑" 
+                                            Clicked="DeleteIncome_Clicked"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="Transparent"
+                                            TextColor="Red"
+                                            FontSize="18" />
                                 </Grid>
                             </Frame>
                         </DataTemplate>

@@ -116,12 +116,14 @@ A unified, cross-platform application that consolidates all academic and financi
 - Record income amounts and dates
 - Date range filtering
 - Income history and summaries
+- Add, edit, and delete income entries
 
 #### Expense Management
 - Track expenses with descriptions
 - Categorize expenses by custom categories
 - Record expense amounts and dates
 - Filter by category and date range
+- Add, edit, and delete expense entries
 
 #### Category Management
 - Create custom expense categories
@@ -446,15 +448,15 @@ Update JWT configuration in `appsettings.json`:
 
 ### 4. Configure the Client
 
-Edit `Services/ApiService.cs` and update the API base URL:
+The client is configured to use the Azure-hosted API by default:
 
 ```csharp
-private readonly string _baseUrl = "https://localhost:7119"; // Change to your API URL
+private readonly string _baseUrl = "https://spt-api-v2-defjczgvg9bgbcaw.eastus2-01.azurewebsites.net";
 ```
 
-For production, use your deployed API URL:
+For local development, you can change this to:
 ```csharp
-private readonly string _baseUrl = "https://your-api-domain.com";
+private readonly string _baseUrl = "https://localhost:7119"; // Local development
 ```
 
 ### 5. Initialize the Database
@@ -547,8 +549,14 @@ dotnet ef database update
 
 #### Summary
 - `GET /api/financial/summary` - Get financial summary (with optional date range)
+  - Date filtering uses normalized date ranges (start of day to end of day) to ensure all records within the selected dates are included
 
 **Note:** All endpoints except `/api/auth/*` require JWT authentication. Include the token in the `Authorization` header: `Bearer <your-token>`
+
+**Recent Updates:**
+- Fixed date filtering in Financial endpoints to properly include all records within selected date ranges
+- Added delete functionality for Income and Expense entries
+- Financial Overview page automatically refreshes when navigating back to it
 
 ## Project Deliverables
 

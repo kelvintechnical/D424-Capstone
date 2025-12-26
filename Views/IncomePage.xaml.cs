@@ -28,6 +28,14 @@ public partial class IncomePage : ContentPage
 		}
 	}
 
+	private void DeleteIncome_Clicked(object sender, EventArgs e)
+	{
+		if (sender is Button button && button.CommandParameter is IncomeDTO income && BindingContext is IncomeViewModel vm)
+		{
+			vm.DeleteIncomeCommand.Execute(income);
+		}
+	}
+
 	private async void LoginToolbarItem_Clicked(object sender, EventArgs e)
 	{
 		await Shell.Current.GoToAsync("//LoginPage");

@@ -99,7 +99,14 @@ public partial class CourseListViewModel : ObservableObject
 		{
 			try
 			{
+				// Verify the term exists in the API and get the correct API termId
+				int apiTermId = await GetApiTermIdAsync(course.TermId);
+				
 				var courseDto = await ConvertToCourseDTOAsync(course);
+				courseDto.TermId = apiTermId; // Use the API termId
+				
+				System.Diagnostics.Debug.WriteLine($"Saving course to API - TermId: {apiTermId} (mapped from local {course.TermId}), Title: {course.Title}");
+				
 				var response = await _apiService.CreateCourseAsync(courseDto);
 				if (response.Success && response.Data != null)
 				{
@@ -122,10 +129,22 @@ public partial class CourseListViewModel : ObservableObject
 					await LoadCoursesAsync(course.TermId);
 					return; // Successfully saved to API
 				}
+				else
+				{
+					System.Diagnostics.Debug.WriteLine($"Failed to create course in API:");
+					System.Diagnostics.Debug.WriteLine($"  Message: {response.Message}");
+					System.Diagnostics.Debug.WriteLine($"  Success: {response.Success}");
+					System.Diagnostics.Debug.WriteLine($"  CourseDTO TermId: {courseDto.TermId}");
+					if (response.Errors != null && response.Errors.Any())
+					{
+						System.Diagnostics.Debug.WriteLine($"  Errors: {string.Join(", ", response.Errors)}");
+					}
+				}
 			}
 			catch (Exception ex)
 			{
-				System.Diagnostics.Debug.WriteLine($"Failed to save course to API: {ex.Message}");
+				System.Diagnostics.Debug.WriteLine($"Exception while saving course to API: {ex.Message}");
+				System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
 				// Fall through to save locally
 			}
 		}
@@ -145,7 +164,14 @@ public partial class CourseListViewModel : ObservableObject
 		{
 			try
 			{
+				// Verify the term exists in the API and get the correct API termId
+				int apiTermId = await GetApiTermIdAsync(course.TermId);
+				
 				var courseDto = await ConvertToCourseDTOAsync(course);
+				courseDto.TermId = apiTermId; // Use the API termId
+				
+				System.Diagnostics.Debug.WriteLine($"Updating course in API - TermId: {apiTermId} (mapped from local {course.TermId}), CourseId: {course.Id}");
+				
 				var response = await _apiService.UpdateCourseAsync(course.Id, courseDto);
 				if (response.Success && response.Data != null)
 				{
@@ -166,10 +192,22 @@ public partial class CourseListViewModel : ObservableObject
 					await LoadCoursesAsync(course.TermId);
 					return; // Successfully updated in API
 				}
+				else
+				{
+					System.Diagnostics.Debug.WriteLine($"Failed to update course in API:");
+					System.Diagnostics.Debug.WriteLine($"  Message: {response.Message}");
+					System.Diagnostics.Debug.WriteLine($"  Success: {response.Success}");
+					System.Diagnostics.Debug.WriteLine($"  CourseDTO TermId: {courseDto.TermId}");
+					if (response.Errors != null && response.Errors.Any())
+					{
+						System.Diagnostics.Debug.WriteLine($"  Errors: {string.Join(", ", response.Errors)}");
+					}
+				}
 			}
 			catch (Exception ex)
 			{
-				System.Diagnostics.Debug.WriteLine($"Failed to update course in API: {ex.Message}");
+				System.Diagnostics.Debug.WriteLine($"Exception while updating course in API: {ex.Message}");
+				System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
 				// Fall through to save locally
 			}
 		}
@@ -367,10 +405,25 @@ public partial class CourseListViewModel : ObservableObject
 			await _db.SaveInstructorAsync(instructor);
 		}
 
+		// Map API termId to local termId if needed
+		int localTermId = courseDto.TermId;
+		var localTerm = await _db.GetTermAsync(courseDto.TermId);
+		if (localTerm == null)
+		{
+			// API termId doesn't exist locally - try to find matching term
+			var allTerms = await _db.GetAllTermsAsync();
+			var matchingTerm = allTerms.FirstOrDefault(t => 
+				Math.Abs((t.StartDate - courseDto.StartDate).TotalDays) < 30);
+			if (matchingTerm != null)
+			{
+				localTermId = matchingTerm.Id;
+			}
+		}
+
 		return new Course
 		{
 			Id = courseDto.Id,
-			TermId = courseDto.TermId,
+			TermId = localTermId,
 			Title = courseDto.Title,
 			StartDate = courseDto.StartDate,
 			EndDate = courseDto.EndDate,
@@ -384,6 +437,40 @@ public partial class CourseListViewModel : ObservableObject
 			CreatedAt = courseDto.CreatedAt,
 			Instructor = instructor
 		};
+	}
+
+	private async Task<int> GetApiTermIdAsync(int localTermId)
+	{
+		// First try to get the term directly from API using local ID
+		var termResponse = await _apiService.GetTermAsync(localTermId);
+		if (termResponse.Success && termResponse.Data != null)
+		{
+			// Term exists in API with this ID
+			return termResponse.Data.Id;
+		}
+
+		// Term doesn't exist in API with this ID - try to find it by matching title/date
+		var termsResponse = await _apiService.GetTermsAsync();
+		if (termsResponse.Success && termsResponse.Data != null)
+		{
+			// Load local term to match
+			var localTerm = await _db.GetTermAsync(localTermId);
+			if (localTerm != null)
+			{
+				var matchingTerm = termsResponse.Data.FirstOrDefault(t => 
+					t.Title == localTerm.Title && 
+					Math.Abs((t.StartDate - localTerm.StartDate).TotalDays) < 1);
+				if (matchingTerm != null)
+				{
+					System.Diagnostics.Debug.WriteLine($"Mapped local termId {localTermId} to API termId {matchingTerm.Id}");
+					return matchingTerm.Id;
+				}
+			}
+		}
+
+		// If we can't find a match, return the original ID (might work if IDs are synced)
+		System.Diagnostics.Debug.WriteLine($"Warning: Could not find matching API termId for local termId {localTermId}, using original ID");
+		return localTermId;
 	}
 }
 

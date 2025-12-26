@@ -197,10 +197,44 @@ public partial class CourseDetailViewModel : ObservableObject
 			{
 				try
 				{
+					// Verify the term exists in the API and get the correct API termId
+					int apiTermId = Course.TermId;
+					var termResponse = await _apiService.GetTermAsync(Course.TermId);
+					if (!termResponse.Success || termResponse.Data == null)
+					{
+						// Term doesn't exist in API - try to find it by loading all terms
+						var termsResponse = await _apiService.GetTermsAsync();
+						if (termsResponse.Success && termsResponse.Data != null)
+						{
+							// Try to find matching term by loading from local database and matching by title/date
+							var localTerm = await _db.GetTermAsync(Course.TermId);
+							if (localTerm != null)
+							{
+								var matchingTerm = termsResponse.Data.FirstOrDefault(t => 
+									t.Title == localTerm.Title && 
+									Math.Abs((t.StartDate - localTerm.StartDate).TotalDays) < 1);
+								if (matchingTerm != null)
+								{
+									apiTermId = matchingTerm.Id;
+									System.Diagnostics.Debug.WriteLine($"Mapped local termId {Course.TermId} to API termId {apiTermId}");
+								}
+								else
+								{
+									System.Diagnostics.Debug.WriteLine($"Warning: Could not find matching term in API for local termId {Course.TermId} (Title: {localTerm.Title})");
+								}
+							}
+						}
+					}
+					else
+					{
+						// Term exists in API, use its ID
+						apiTermId = termResponse.Data.Id;
+					}
+
 					var courseDto = new CourseDTO
 					{
 						Id = Course.Id,
-						TermId = Course.TermId,
+						TermId = apiTermId,
 						Title = Course.Title,
 						StartDate = Course.StartDate,
 						EndDate = Course.EndDate,
@@ -216,6 +250,8 @@ public partial class CourseDetailViewModel : ObservableObject
 						CreatedAt = Course.CreatedAt,
 						UpdatedAt = DateTime.UtcNow
 					};
+					
+					System.Diagnostics.Debug.WriteLine($"Saving course to API - TermId: {apiTermId}, CourseId: {Course.Id}, Title: {Course.Title}");
 					
 					if (Course.Id == 0)
 					{
@@ -237,10 +273,19 @@ public partial class CourseDetailViewModel : ObservableObject
 							Course.LetterGrade = updatedCourse.LetterGrade;
 							Course.CreatedAt = updatedCourse.CreatedAt;
 							apiSyncSuccess = true;
+							System.Diagnostics.Debug.WriteLine($"Successfully created course in API with ID: {Course.Id}");
 						}
 						else
 						{
-							System.Diagnostics.Debug.WriteLine($"Failed to create course in API: {response.Message}");
+							System.Diagnostics.Debug.WriteLine($"Failed to create course in API:");
+							System.Diagnostics.Debug.WriteLine($"  Message: {response.Message}");
+							System.Diagnostics.Debug.WriteLine($"  Success: {response.Success}");
+							System.Diagnostics.Debug.WriteLine($"  CourseDTO TermId: {courseDto.TermId}");
+							System.Diagnostics.Debug.WriteLine($"  CourseDTO Title: {courseDto.Title}");
+							if (response.Errors != null && response.Errors.Any())
+							{
+								System.Diagnostics.Debug.WriteLine($"  Errors: {string.Join(", ", response.Errors)}");
+							}
 						}
 					}
 					else
@@ -261,16 +306,26 @@ public partial class CourseDetailViewModel : ObservableObject
 							Course.CurrentGrade = updatedCourse.CurrentGrade;
 							Course.LetterGrade = updatedCourse.LetterGrade;
 							apiSyncSuccess = true;
+							System.Diagnostics.Debug.WriteLine($"Successfully updated course in API with ID: {Course.Id}");
 						}
 						else
 						{
-							System.Diagnostics.Debug.WriteLine($"Failed to update course in API: {response.Message}");
+							System.Diagnostics.Debug.WriteLine($"Failed to update course in API:");
+							System.Diagnostics.Debug.WriteLine($"  Message: {response.Message}");
+							System.Diagnostics.Debug.WriteLine($"  Success: {response.Success}");
+							System.Diagnostics.Debug.WriteLine($"  CourseDTO TermId: {courseDto.TermId}");
+							System.Diagnostics.Debug.WriteLine($"  CourseDTO Title: {courseDto.Title}");
+							if (response.Errors != null && response.Errors.Any())
+							{
+								System.Diagnostics.Debug.WriteLine($"  Errors: {string.Join(", ", response.Errors)}");
+							}
 						}
 					}
 				}
 				catch (Exception ex)
 				{
-					System.Diagnostics.Debug.WriteLine($"Failed to sync course to API: {ex.Message}");
+					System.Diagnostics.Debug.WriteLine($"Exception while syncing course to API: {ex.Message}");
+					System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
 					apiSyncSuccess = false;
 				}
 			}
@@ -546,11 +601,41 @@ public partial class CourseDetailViewModel : ObservableObject
 			await _db.SaveInstructorAsync(Instructor);
 			Course.InstructorId = Instructor.Id;
 
+			// Verify the term exists in the API and get the correct API termId
+			int apiTermId = Course.TermId;
+			var termResponse = await _apiService.GetTermAsync(Course.TermId);
+			if (!termResponse.Success || termResponse.Data == null)
+			{
+				// Term doesn't exist in API - try to find it by loading all terms
+				var termsResponse = await _apiService.GetTermsAsync();
+				if (termsResponse.Success && termsResponse.Data != null)
+				{
+					// Try to find matching term by loading from local database and matching by title/date
+					var localTerm = await _db.GetTermAsync(Course.TermId);
+					if (localTerm != null)
+					{
+						var matchingTerm = termsResponse.Data.FirstOrDefault(t => 
+							t.Title == localTerm.Title && 
+							Math.Abs((t.StartDate - localTerm.StartDate).TotalDays) < 1);
+						if (matchingTerm != null)
+						{
+							apiTermId = matchingTerm.Id;
+							System.Diagnostics.Debug.WriteLine($"Mapped local termId {Course.TermId} to API termId {apiTermId} in EnsureCourseSyncedAsync");
+						}
+					}
+				}
+			}
+			else
+			{
+				// Term exists in API, use its ID
+				apiTermId = termResponse.Data.Id;
+			}
+
 			// Create course in API
 			var courseDto = new CourseDTO
 			{
 				Id = Course.Id,
-				TermId = Course.TermId,
+				TermId = apiTermId,
 				Title = Course.Title,
 				StartDate = Course.StartDate,
 				EndDate = Course.EndDate,

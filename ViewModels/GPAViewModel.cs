@@ -3,6 +3,9 @@ using CommunityToolkit.Mvvm.Input;
 using StudentLifeTracker.Shared.DTOs;
 using StudentProgressTracker.Services;
 using System.Collections.ObjectModel;
+using System.IO;
+using Microsoft.Maui.ApplicationModel.DataTransfer;
+using Microsoft.Maui.Storage;
 
 namespace StudentProgressTracker.ViewModels;
 
@@ -14,6 +17,7 @@ public partial class GPAViewModel : ObservableObject
 	[ObservableProperty] private double currentTermGPA;
 	[ObservableProperty] private ObservableCollection<CourseGradeInfo> coursesWithGrades = new();
 	[ObservableProperty] private bool isLoading;
+	[ObservableProperty] private bool isBusy;
 	[ObservableProperty] private int? selectedTermId;
 	[ObservableProperty] private CourseGradeInfo? selectedCourse;
 	[ObservableProperty] private string currentGradeInput = string.Empty;
@@ -201,6 +205,100 @@ public partial class GPAViewModel : ObservableObject
 		catch
 		{
 			await Shell.Current.GoToAsync($"//{nameof(Views.TermsPage)}");
+		}
+	}
+
+	[RelayCommand]
+	private async Task ExportTranscriptAsync()
+	{
+		try
+		{
+			IsBusy = true;
+
+			var csvBytes = await _apiService.DownloadTranscriptCsvAsync();
+			if (csvBytes == null || csvBytes.Length == 0)
+			{
+				await Shell.Current.DisplayAlert("Error", "No data to export. Add some courses with grades first.", "OK");
+				return;
+			}
+
+			var fileName = $"Transcript_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+			var filePath = Path.Combine(FileSystem.Current.CacheDirectory, fileName);
+
+			await File.WriteAllBytesAsync(filePath, csvBytes);
+
+			await Share.Default.RequestAsync(new ShareFileRequest
+			{
+				Title = "Export Academic Transcript",
+				File = new ShareFile(filePath)
+			});
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"Export error: {ex.Message}");
+			await Shell.Current.DisplayAlert("Error", $"Failed to export: {ex.Message}", "OK");
+		}
+		finally
+		{
+			IsBusy = false;
+		}
+	}
+
+	[RelayCommand]
+	private async Task ExportTermGpaAsync()
+	{
+		if (!SelectedTermId.HasValue)
+		{
+			await Shell.Current.DisplayAlert("Error", "No term selected.", "OK");
+			return;
+		}
+
+		try
+		{
+			IsBusy = true;
+
+			var termId = SelectedTermId.Value;
+			var csvBytes = await _apiService.DownloadGpaReportCsvAsync(termId);
+			if (csvBytes == null || csvBytes.Length == 0)
+			{
+				await Shell.Current.DisplayAlert("Error", "No grades found for this term.", "OK");
+				return;
+			}
+
+			// Try to get a friendly title for the filename (fallback to term id)
+			var termTitle = $"Term_{termId}";
+			try
+			{
+				var termResponse = await _apiService.GetTermAsync(termId);
+				if (termResponse.Success && termResponse.Data != null && !string.IsNullOrWhiteSpace(termResponse.Data.Title))
+				{
+					termTitle = termResponse.Data.Title;
+				}
+			}
+			catch
+			{
+				// ignore and use fallback
+			}
+
+			var safeTitle = termTitle.Replace(" ", "_");
+			var fileName = $"GPA_Report_{safeTitle}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+			var filePath = Path.Combine(FileSystem.Current.CacheDirectory, fileName);
+
+			await File.WriteAllBytesAsync(filePath, csvBytes);
+
+			await Share.Default.RequestAsync(new ShareFileRequest
+			{
+				Title = $"Export GPA Report - {termTitle}",
+				File = new ShareFile(filePath)
+			});
+		}
+		catch (Exception ex)
+		{
+			await Shell.Current.DisplayAlert("Error", $"Failed to export: {ex.Message}", "OK");
+		}
+		finally
+		{
+			IsBusy = false;
 		}
 	}
 }

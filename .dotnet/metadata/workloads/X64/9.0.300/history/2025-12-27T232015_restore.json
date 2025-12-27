@@ -1,0 +1,59 @@
+{
+  "TimeStarted": "2025-12-27T23:20:15.0016494+00:00",
+  "TimeCompleted": "2025-12-27T23:20:23.2532078+00:00",
+  "CommandName": "restore",
+  "RollbackFileContents": null,
+  "CommandLineArgs": [
+    "/workspace/.dotnet/sdk/9.0.306/dotnet.dll",
+    "workload",
+    "restore",
+    "/workspace/StudentProgressTracker.csproj"
+  ],
+  "Succeeded": true,
+  "ErrorMessage": null,
+  "StateBeforeCommand": {
+    "ManifestVersions": {
+      "microsoft.net.sdk.android": "35.0.7/9.0.100",
+      "microsoft.net.sdk.ios": "18.0.9617/9.0.100",
+      "microsoft.net.sdk.maccatalyst": "18.0.9617/9.0.100",
+      "microsoft.net.sdk.macos": "15.0.9617/9.0.100",
+      "microsoft.net.sdk.maui": "9.0.0/9.0.100",
+      "microsoft.net.sdk.tvos": "18.0.9617/9.0.100",
+      "microsoft.net.workload.mono.toolchain.current": "9.0.10/9.0.100",
+      "microsoft.net.workload.emscripten.current": "9.0.10/9.0.100",
+      "microsoft.net.workload.emscripten.net6": "9.0.10/9.0.100",
+      "microsoft.net.workload.emscripten.net7": "9.0.10/9.0.100",
+      "microsoft.net.workload.emscripten.net8": "9.0.10/9.0.100",
+      "microsoft.net.workload.mono.toolchain.net6": "9.0.10/9.0.100",
+      "microsoft.net.workload.mono.toolchain.net7": "9.0.10/9.0.100",
+      "microsoft.net.workload.mono.toolchain.net8": "9.0.10/9.0.100",
+      "microsoft.net.sdk.aspire": "8.2.2/8.0.100"
+    },
+    "WorkloadSetVersion": "9.0.300-manifests.87361a52",
+    "InstalledWorkloads": []
+  },
+  "StateAfterCommand": {
+    "ManifestVersions": {
+      "microsoft.net.sdk.android": "35.0.105/9.0.100",
+      "microsoft.net.sdk.ios": "26.0.9783/9.0.100",
+      "microsoft.net.sdk.maccatalyst": "26.0.9783/9.0.100",
+      "microsoft.net.sdk.macos": "26.0.9783/9.0.100",
+      "microsoft.net.sdk.maui": "9.0.120/9.0.100",
+      "microsoft.net.sdk.tvos": "26.0.9783/9.0.100",
+      "microsoft.net.workload.mono.toolchain.current": "9.0.11/9.0.100",
+      "microsoft.net.workload.emscripten.current": "9.0.11/9.0.100",
+      "microsoft.net.workload.emscripten.net6": "9.0.11/9.0.100",
+      "microsoft.net.workload.emscripten.net7": "9.0.11/9.0.100",
+      "microsoft.net.workload.emscripten.net8": "9.0.11/9.0.100",
+      "microsoft.net.workload.mono.toolchain.net6": "9.0.11/9.0.100",
+      "microsoft.net.workload.mono.toolchain.net7": "9.0.11/9.0.100",
+      "microsoft.net.workload.mono.toolchain.net8": "9.0.11/9.0.100",
+      "microsoft.net.sdk.aspire": "8.2.2/8.0.100"
+    },
+    "WorkloadSetVersion": "9.0.300-manifests.3d042d96",
+    "InstalledWorkloads": [
+      "maui-tizen"
+    ]
+  },
+  "GlobalJsonVersion": null
+}

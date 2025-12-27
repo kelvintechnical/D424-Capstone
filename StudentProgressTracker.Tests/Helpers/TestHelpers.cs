@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -6,6 +8,7 @@ using Moq;
 using StudentLifeTracker.API.Data;
 using StudentLifeTracker.API.Models;
 using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace StudentProgressTracker.Tests.Helpers;
 
@@ -69,6 +72,26 @@ public static class TestHelpers
             null!, // authenticationSchemeProvider
             null!  // userConfirmation
         );
+    }
+
+    public static void SetUserContext(ControllerBase controller, string userId)
+    {
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.Email, "test@example.com")
+        };
+
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        var principal = new ClaimsPrincipal(identity);
+
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = principal
+            }
+        };
     }
 }
 

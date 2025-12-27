@@ -6,10 +6,10 @@ using StudentLifeTracker.API.Controllers;
 using StudentLifeTracker.API.Data;
 using StudentLifeTracker.API.Models;
 using StudentLifeTracker.Shared.DTOs;
-using StudentLifeTracker.Tests.Helpers;
+using StudentProgressTracker.Tests.Helpers;
 using Xunit;
 
-namespace StudentLifeTracker.Tests.Controllers;
+namespace StudentProgressTracker.Tests.Controllers;
 
 public class FinancialControllerTests : IDisposable
 {
@@ -82,8 +82,8 @@ public class FinancialControllerTests : IDisposable
         var result = await _controller.CreateIncome(incomeDto);
 
         // Assert
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-        var response = Assert.IsType<ApiResponse<IncomeDTO>>(createdResult.Value);
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var response = Assert.IsType<ApiResponse<IncomeDTO>>(okResult.Value);
         Assert.True(response.Success);
         Assert.NotNull(response.Data);
         Assert.Equal(750.00m, response.Data.Amount);
@@ -170,8 +170,8 @@ public class FinancialControllerTests : IDisposable
         var result = await _controller.CreateExpense(expenseDto);
 
         // Assert
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-        var response = Assert.IsType<ApiResponse<ExpenseDTO>>(createdResult.Value);
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var response = Assert.IsType<ApiResponse<ExpenseDTO>>(okResult.Value);
         Assert.True(response.Success);
         Assert.NotNull(response.Data);
         Assert.Equal(30.00m, response.Data.Amount);

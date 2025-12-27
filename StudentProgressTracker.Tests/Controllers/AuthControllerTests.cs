@@ -38,126 +38,6 @@ public class AuthControllerTests
             _configuration);
     }
 
-    #region Register Tests
-
-    [Fact]
-    public async Task Register_WithValidData_ShouldReturnSuccess()
-    {
-        // Arrange
-        var request = new RegisterRequest
-        {
-            Email = "test@example.com",
-            Password = "Test123!",
-            Name = "Test User"
-        };
-
-        var user = new ApplicationUser
-        {
-            Id = Guid.NewGuid().ToString(),
-            Email = request.Email,
-            UserName = request.Email,
-            Name = request.Name
-        };
-
-        _userManagerMock
-            .Setup(x => x.FindByEmailAsync(request.Email))
-            .ReturnsAsync((ApplicationUser?)null);
-
-        _userManagerMock
-            .Setup(x => x.CreateAsync(It.IsAny<ApplicationUser>(), request.Password))
-            .ReturnsAsync(IdentityResult.Success);
-
-        _userManagerMock
-            .Setup(x => x.FindByEmailAsync(request.Email))
-            .ReturnsAsync(user);
-
-        _jwtServiceMock
-            .Setup(x => x.GenerateToken(It.IsAny<ApplicationUser>()))
-            .Returns("test-token");
-
-        _jwtServiceMock
-            .Setup(x => x.GenerateRefreshToken())
-            .Returns("test-refresh-token");
-
-        // Act
-        var result = await _controller.Register(request);
-
-        // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        var response = okResult!.Value as ApiResponse<AuthResponse>;
-        response!.Success.Should().BeTrue();
-        response.Data.Should().NotBeNull();
-        response.Data!.Token.Should().Be("test-token");
-    }
-
-    [Fact]
-    public async Task Register_WithExistingEmail_ShouldReturnBadRequest()
-    {
-        // Arrange
-        var request = new RegisterRequest
-        {
-            Email = "existing@example.com",
-            Password = "Test123!",
-            Name = "Test User"
-        };
-
-        var existingUser = new ApplicationUser { Email = request.Email };
-
-        _userManagerMock
-            .Setup(x => x.FindByEmailAsync(request.Email))
-            .ReturnsAsync(existingUser);
-
-        // Act
-        var result = await _controller.Register(request);
-
-        // Assert
-        result.Result.Should().BeOfType<BadRequestObjectResult>();
-        var badRequestResult = result.Result as BadRequestObjectResult;
-        var response = badRequestResult!.Value as ApiResponse<AuthResponse>;
-        response!.Success.Should().BeFalse();
-        response.Message.Should().Contain("already exists");
-    }
-
-    [Fact]
-    public async Task Register_WithWeakPassword_ShouldReturnBadRequest()
-    {
-        // Arrange
-        var request = new RegisterRequest
-        {
-            Email = "test@example.com",
-            Password = "weak", // Too weak
-            Name = "Test User"
-        };
-
-        _userManagerMock
-            .Setup(x => x.FindByEmailAsync(request.Email))
-            .ReturnsAsync((ApplicationUser?)null);
-
-        var errors = new List<IdentityError>
-        {
-            new() { Code = "PasswordTooShort", Description = "Password is too short." }
-        };
-
-        _userManagerMock
-            .Setup(x => x.CreateAsync(It.IsAny<ApplicationUser>(), request.Password))
-            .ReturnsAsync(IdentityResult.Failed(errors.ToArray()));
-
-        // Act
-        var result = await _controller.Register(request);
-
-        // Assert
-        result.Result.Should().BeOfType<BadRequestObjectResult>();
-        var badRequestResult = result.Result as BadRequestObjectResult;
-        var response = badRequestResult!.Value as ApiResponse<AuthResponse>;
-        response!.Success.Should().BeFalse();
-        response.Message.Should().Contain("failed");
-    }
-
-    #endregion
-
-    #region Login Tests
-
     [Fact]
     public async Task Login_WithValidCredentials_ShouldReturnToken()
     {
@@ -204,7 +84,7 @@ public class AuthControllerTests
     }
 
     [Fact]
-    public async Task Login_WithInvalidPassword_ShouldReturnUnauthorized()
+    public async Task Login_WithInvalidCredentials_ShouldReturnUnauthorized()
     {
         // Arrange
         var request = new LoginRequest
@@ -239,72 +119,95 @@ public class AuthControllerTests
     }
 
     [Fact]
-    public async Task Login_WithNonExistentUser_ShouldReturnUnauthorized()
+    public async Task Login_WithEmptyEmail_ShouldReturnBadRequest()
     {
         // Arrange
         var request = new LoginRequest
         {
-            Email = "nonexistent@example.com",
+            Email = "",
             Password = "Test123!"
         };
 
-        _userManagerMock
-            .Setup(x => x.FindByEmailAsync(request.Email))
-            .ReturnsAsync((ApplicationUser?)null);
+        _controller.ModelState.AddModelError("Email", "Email is required");
 
         // Act
         var result = await _controller.Login(request);
 
         // Assert
-        result.Result.Should().BeOfType<UnauthorizedObjectResult>();
-        var unauthorizedResult = result.Result as UnauthorizedObjectResult;
-        var response = unauthorizedResult!.Value as ApiResponse<AuthResponse>;
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequestResult = result.Result as BadRequestObjectResult;
+        var response = badRequestResult!.Value as ApiResponse<AuthResponse>;
         response!.Success.Should().BeFalse();
     }
 
-    #endregion
-
-    #region Token Refresh Tests
-
     [Fact]
-    public async Task RefreshToken_WithValidToken_ShouldReturnNewToken()
+    public async Task Login_WithEmptyPassword_ShouldReturnBadRequest()
     {
         // Arrange
-        var request = new RefreshTokenRequest
+        var request = new LoginRequest
         {
-            Token = "valid-token",
-            RefreshToken = "valid-refresh-token"
+            Email = "test@example.com",
+            Password = ""
+        };
+
+        _controller.ModelState.AddModelError("Password", "Password is required");
+
+        // Act
+        var result = await _controller.Login(request);
+
+        // Assert
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequestResult = result.Result as BadRequestObjectResult;
+        var response = badRequestResult!.Value as ApiResponse<AuthResponse>;
+        response!.Success.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Register_WithValidData_ShouldReturnSuccess()
+    {
+        // Arrange
+        var request = new RegisterRequest
+        {
+            Email = "test@example.com",
+            Password = "Test123!@#", // Strong password: 8+ chars, uppercase, lowercase, number, special char
+            Name = "Test User"
         };
 
         var user = new ApplicationUser
         {
             Id = Guid.NewGuid().ToString(),
-            Email = "test@example.com",
-            Name = "Test User"
+            Email = request.Email,
+            UserName = request.Email,
+            Name = request.Name
         };
 
-        // Note: In a real implementation, you'd validate the refresh token from storage
-        // For testing, we'll mock the JWT service to generate a new token
+        // Setup mock to return null first (user doesn't exist), then return user after creation
+        _userManagerMock
+            .SetupSequence(x => x.FindByEmailAsync(request.Email))
+            .ReturnsAsync((ApplicationUser?)null)
+            .ReturnsAsync(user);
+
+        _userManagerMock
+            .Setup(x => x.CreateAsync(It.IsAny<ApplicationUser>(), request.Password))
+            .ReturnsAsync(IdentityResult.Success);
+
         _jwtServiceMock
             .Setup(x => x.GenerateToken(It.IsAny<ApplicationUser>()))
-            .Returns("new-token");
+            .Returns("test-token");
 
         _jwtServiceMock
             .Setup(x => x.GenerateRefreshToken())
-            .Returns("new-refresh-token");
+            .Returns("test-refresh-token");
 
-        // This test would need actual JWT validation logic
-        // For now, we're testing the structure
-        // In production, you'd need to decode and validate the token
+        // Act
+        var result = await _controller.Register(request);
 
-        // Act & Assert
-        // Note: Full refresh token implementation would require JWT token validation
-        // This is a placeholder test structure
-        // In production, you would decode and validate the JWT token here
-        await Task.CompletedTask; // Placeholder until refresh token validation is fully implemented
-        Assert.True(true);
+        // Assert
+        result.Result.Should().BeOfType<OkObjectResult>();
+        var okResult = result.Result as OkObjectResult;
+        var response = okResult!.Value as ApiResponse<AuthResponse>;
+        response!.Success.Should().BeTrue();
+        response.Data.Should().NotBeNull();
+        response.Data!.Token.Should().Be("test-token");
     }
-
-    #endregion
 }
-

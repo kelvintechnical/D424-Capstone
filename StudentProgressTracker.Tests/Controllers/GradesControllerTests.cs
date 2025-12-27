@@ -6,10 +6,10 @@ using StudentLifeTracker.API.Controllers;
 using StudentLifeTracker.API.Data;
 using StudentLifeTracker.API.Models;
 using StudentLifeTracker.Shared.DTOs;
-using StudentLifeTracker.Tests.Helpers;
+using StudentProgressTracker.Tests.Helpers;
 using Xunit;
 
-namespace StudentLifeTracker.Tests.Controllers;
+namespace StudentProgressTracker.Tests.Controllers;
 
 public class GradesControllerTests : IDisposable
 {
@@ -287,11 +287,11 @@ public class GradesControllerTests : IDisposable
         _context.Courses.Add(course);
         await _context.SaveChangesAsync();
 
-        // Current grade: 80%, Final weight: 0.3, Target: B (80%)
-        // Needed = (80 - (80 * 0.7)) / 0.3 = (80 - 56) / 0.3 = 80
+        // Current grade: 80%, Final weight: 0.3, Target: B (83% per ConvertLetterToPercent)
+        // Needed = (83 - (80 * 0.7)) / 0.3 = (83 - 56) / 0.3 = 27 / 0.3 = 90
         var currentGrade = 80.0;
         var finalWeight = 0.3;
-        var targetGrade = "B";
+        var targetGrade = "B"; // B = 83%
 
         // Act
         var result = await _controller.GetGradeProjection(1, currentGrade, finalWeight, targetGrade);
@@ -305,9 +305,9 @@ public class GradesControllerTests : IDisposable
         Assert.Equal(currentGrade, response.Data.CurrentGrade);
         Assert.Equal(finalWeight, response.Data.FinalWeight);
         Assert.Equal(targetGrade, response.Data.TargetGrade);
-        Assert.True(response.Data.IsAchievable);
-        // Should need approximately 80% on final
-        Assert.True(response.Data.NeededOnFinal >= 79.0 && response.Data.NeededOnFinal <= 81.0);
+        Assert.True(response.Data.IsAchievable); // 90% is achievable (0-100)
+        // Should need approximately 90% on final (not 80%)
+        Assert.True(response.Data.NeededOnFinal >= 89.0 && response.Data.NeededOnFinal <= 91.0);
     }
 
     public void Dispose()

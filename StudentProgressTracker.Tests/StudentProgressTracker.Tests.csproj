@@ -20,6 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\StudentLifeTracker.API\StudentLifeTracker.API.csproj" />
     <ProjectReference Include="..\StudentLifeTracker.Shared\StudentLifeTracker.Shared.csproj" />
   </ItemGroup>

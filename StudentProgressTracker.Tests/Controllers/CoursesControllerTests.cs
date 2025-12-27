@@ -6,31 +6,31 @@ using StudentLifeTracker.API.Controllers;
 using StudentLifeTracker.API.Data;
 using StudentLifeTracker.API.Models;
 using StudentLifeTracker.Shared.DTOs;
-using StudentLifeTracker.Tests.Helpers;
+using StudentProgressTracker.Tests.Helpers;
 using Xunit;
 
-namespace StudentLifeTracker.Tests.Controllers;
+namespace StudentProgressTracker.Tests.Controllers;
 
-public class AssessmentsControllerTests : IDisposable
+public class CoursesControllerTests : IDisposable
 {
     private readonly ApplicationDbContext _context;
-    private readonly Mock<ILogger<AssessmentsController>> _loggerMock;
-    private readonly AssessmentsController _controller;
+    private readonly Mock<ILogger<CoursesController>> _loggerMock;
+    private readonly CoursesController _controller;
     private readonly string _testUserId = "test-user-123";
 
-    public AssessmentsControllerTests()
+    public CoursesControllerTests()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
         _context = new ApplicationDbContext(options);
-        _loggerMock = new Mock<ILogger<AssessmentsController>>();
-        _controller = new AssessmentsController(_context, _loggerMock.Object);
+        _loggerMock = new Mock<ILogger<CoursesController>>();
+        _controller = new CoursesController(_context, _loggerMock.Object);
         TestHelpers.SetUserContext(_controller, _testUserId);
     }
 
     [Fact]
-    public async Task Test_GetAssessmentsByCourse_ReturnsAssessments()
+    public async Task Test_GetCoursesByTerm_ReturnsCoursesForTerm()
     {
         // Arrange
         var term = new Term
@@ -45,7 +45,7 @@ public class AssessmentsControllerTests : IDisposable
         };
         _context.Terms.Add(term);
 
-        var course = new Course
+        var course1 = new Course
         {
             Id = 1,
             TermId = 1,
@@ -60,48 +60,37 @@ public class AssessmentsControllerTests : IDisposable
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
-        _context.Courses.Add(course);
-
-        var assessment1 = new Assessment
-        {
-            Id = 1,
-            CourseId = 1,
-            Name = "Midterm Exam",
-            Type = "Objective",
-            StartDate = new DateTime(2025, 10, 15),
-            DueDate = new DateTime(2025, 10, 15),
-            NotificationsEnabled = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-        var assessment2 = new Assessment
+        var course2 = new Course
         {
             Id = 2,
-            CourseId = 1,
-            Name = "Final Project",
-            Type = "Performance",
-            StartDate = new DateTime(2025, 11, 1),
-            DueDate = new DateTime(2025, 12, 10),
-            NotificationsEnabled = true,
+            TermId = 1,
+            Title = "English 101",
+            StartDate = new DateTime(2025, 9, 1),
+            EndDate = new DateTime(2025, 12, 15),
+            Status = "InProgress",
+            InstructorName = "Dr. Jones",
+            InstructorPhone = "555-0200",
+            InstructorEmail = "jones@university.edu",
+            CreditHours = 3,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
-        _context.Assessments.AddRange(assessment1, assessment2);
+        _context.Courses.AddRange(course1, course2);
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _controller.GetAssessmentsByCourse(1);
+        var result = await _controller.GetCoursesByTerm(1);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var response = Assert.IsType<ApiResponse<List<AssessmentDTO>>>(okResult.Value);
+        var response = Assert.IsType<ApiResponse<List<CourseDTO>>>(okResult.Value);
         Assert.True(response.Success);
         Assert.NotNull(response.Data);
         Assert.Equal(2, response.Data.Count);
     }
 
     [Fact]
-    public async Task Test_CreateAssessment_WithValidData_ReturnsCreatedAssessment()
+    public async Task Test_GetCourseById_WithValidId_ReturnsCourse()
     {
         // Arrange
         var term = new Term
@@ -134,98 +123,60 @@ public class AssessmentsControllerTests : IDisposable
         _context.Courses.Add(course);
         await _context.SaveChangesAsync();
 
-        var assessmentDto = new AssessmentDTO
-        {
-            CourseId = 1,
-            Name = "Quiz 1",
-            Type = "Objective",
-            StartDate = new DateTime(2025, 9, 15),
-            DueDate = new DateTime(2025, 9, 15),
-            NotificationsEnabled = true
-        };
-
         // Act
-        var result = await _controller.CreateAssessment(assessmentDto);
-
-        // Assert
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-        var response = Assert.IsType<ApiResponse<AssessmentDTO>>(createdResult.Value);
-        Assert.True(response.Success);
-        Assert.NotNull(response.Data);
-        Assert.Equal("Quiz 1", response.Data.Name);
-    }
-
-    [Fact]
-    public async Task Test_UpdateAssessment_WithValidData_ReturnsUpdatedAssessment()
-    {
-        // Arrange
-        var term = new Term
-        {
-            Id = 1,
-            UserId = _testUserId,
-            Title = "Fall 2025",
-            StartDate = new DateTime(2025, 9, 1),
-            EndDate = new DateTime(2025, 12, 15),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-        _context.Terms.Add(term);
-
-        var course = new Course
-        {
-            Id = 1,
-            TermId = 1,
-            Title = "Mathematics 101",
-            StartDate = new DateTime(2025, 9, 1),
-            EndDate = new DateTime(2025, 12, 15),
-            Status = "InProgress",
-            InstructorName = "Dr. Smith",
-            InstructorPhone = "555-0100",
-            InstructorEmail = "smith@university.edu",
-            CreditHours = 3,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-        _context.Courses.Add(course);
-
-        var assessment = new Assessment
-        {
-            Id = 1,
-            CourseId = 1,
-            Name = "Midterm Exam",
-            Type = "Objective",
-            StartDate = new DateTime(2025, 10, 15),
-            DueDate = new DateTime(2025, 10, 15),
-            NotificationsEnabled = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-        _context.Assessments.Add(assessment);
-        await _context.SaveChangesAsync();
-
-        var updateDto = new AssessmentDTO
-        {
-            Name = "Midterm Exam Updated",
-            Type = "Objective",
-            StartDate = new DateTime(2025, 10, 20),
-            DueDate = new DateTime(2025, 10, 20),
-            NotificationsEnabled = false
-        };
-
-        // Act
-        var result = await _controller.UpdateAssessment(1, updateDto);
+        var result = await _controller.GetCourse(1);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var response = Assert.IsType<ApiResponse<AssessmentDTO>>(okResult.Value);
+        var response = Assert.IsType<ApiResponse<CourseDTO>>(okResult.Value);
         Assert.True(response.Success);
         Assert.NotNull(response.Data);
-        Assert.Equal("Midterm Exam Updated", response.Data.Name);
-        Assert.False(response.Data.NotificationsEnabled);
+        Assert.Equal("Mathematics 101", response.Data.Title);
     }
 
     [Fact]
-    public async Task Test_DeleteAssessment_WithValidId_ReturnsSuccess()
+    public async Task Test_CreateCourse_WithValidData_ReturnsCreatedCourse()
+    {
+        // Arrange
+        var term = new Term
+        {
+            Id = 1,
+            UserId = _testUserId,
+            Title = "Fall 2025",
+            StartDate = new DateTime(2025, 9, 1),
+            EndDate = new DateTime(2025, 12, 15),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        _context.Terms.Add(term);
+        await _context.SaveChangesAsync();
+
+        var courseDto = new CourseDTO
+        {
+            TermId = 1,
+            Title = "Computer Science 101",
+            StartDate = new DateTime(2025, 9, 1),
+            EndDate = new DateTime(2025, 12, 15),
+            Status = "InProgress",
+            InstructorName = "Dr. Brown",
+            InstructorPhone = "555-0300",
+            InstructorEmail = "brown@university.edu",
+            CreditHours = 4
+        };
+
+        // Act
+        var result = await _controller.CreateCourse(courseDto);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var response = Assert.IsType<ApiResponse<CourseDTO>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.NotNull(response.Data);
+        Assert.Equal("Computer Science 101", response.Data.Title);
+    }
+
+    [Fact]
+    public async Task Test_UpdateCourse_WithValidData_ReturnsUpdatedCourse()
     {
         // Arrange
         var term = new Term
@@ -256,24 +207,68 @@ public class AssessmentsControllerTests : IDisposable
             UpdatedAt = DateTime.UtcNow
         };
         _context.Courses.Add(course);
+        await _context.SaveChangesAsync();
 
-        var assessment = new Assessment
+        var updateDto = new CourseDTO
+        {
+            Title = "Advanced Mathematics 101",
+            StartDate = new DateTime(2025, 9, 1),
+            EndDate = new DateTime(2025, 12, 15),
+            Status = "InProgress",
+            InstructorName = "Dr. Smith",
+            InstructorPhone = "555-0100",
+            InstructorEmail = "smith@university.edu",
+            CreditHours = 4
+        };
+
+        // Act
+        var result = await _controller.UpdateCourse(1, updateDto);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var response = Assert.IsType<ApiResponse<CourseDTO>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.NotNull(response.Data);
+        Assert.Equal("Advanced Mathematics 101", response.Data.Title);
+        Assert.Equal(4, response.Data.CreditHours);
+    }
+
+    [Fact]
+    public async Task Test_DeleteCourse_WithValidId_ReturnsSuccess()
+    {
+        // Arrange
+        var term = new Term
         {
             Id = 1,
-            CourseId = 1,
-            Name = "Midterm Exam",
-            Type = "Objective",
-            StartDate = new DateTime(2025, 10, 15),
-            DueDate = new DateTime(2025, 10, 15),
-            NotificationsEnabled = true,
+            UserId = _testUserId,
+            Title = "Fall 2025",
+            StartDate = new DateTime(2025, 9, 1),
+            EndDate = new DateTime(2025, 12, 15),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
-        _context.Assessments.Add(assessment);
+        _context.Terms.Add(term);
+
+        var course = new Course
+        {
+            Id = 1,
+            TermId = 1,
+            Title = "Mathematics 101",
+            StartDate = new DateTime(2025, 9, 1),
+            EndDate = new DateTime(2025, 12, 15),
+            Status = "InProgress",
+            InstructorName = "Dr. Smith",
+            InstructorPhone = "555-0100",
+            InstructorEmail = "smith@university.edu",
+            CreditHours = 3,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        _context.Courses.Add(course);
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _controller.DeleteAssessment(1);
+        var result = await _controller.DeleteCourse(1);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -281,9 +276,9 @@ public class AssessmentsControllerTests : IDisposable
         Assert.True(response.Success);
         Assert.True(response.Data);
 
-        // Verify assessment was deleted
-        var deletedAssessment = await _context.Assessments.FindAsync(1);
-        Assert.Null(deletedAssessment);
+        // Verify course was deleted
+        var deletedCourse = await _context.Courses.FindAsync(1);
+        Assert.Null(deletedCourse);
     }
 
     public void Dispose()

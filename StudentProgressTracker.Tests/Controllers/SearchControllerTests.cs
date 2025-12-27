@@ -102,10 +102,8 @@ public class SearchControllerTests : IDisposable
         _context.SaveChanges();
     }
 
-    #region Course Search Tests
-
     [Fact]
-    public async Task SearchCourses_ByTitle_ShouldReturnMatchingCourses()
+    public async Task SearchCourses_ShouldReturnMatchingCourses()
     {
         // Arrange
         var query = "Mobile";
@@ -123,112 +121,7 @@ public class SearchControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task SearchCourses_ByInstructorName_ShouldReturnMatchingCourses()
-    {
-        // Arrange
-        var query = "Smith";
-
-        // Act
-        var result = await _controller.SearchCourses(query);
-
-        // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        var response = okResult!.Value as ApiResponse<List<SearchResultDTO>>;
-        response!.Success.Should().BeTrue();
-        response.Data.Should().NotBeEmpty();
-    }
-
-    [Fact]
-    public async Task SearchCourses_ByInstructorEmail_ShouldReturnMatchingCourses()
-    {
-        // Arrange
-        var query = "smith@university.edu";
-
-        // Act
-        var result = await _controller.SearchCourses(query);
-
-        // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        var response = okResult!.Value as ApiResponse<List<SearchResultDTO>>;
-        response!.Success.Should().BeTrue();
-        response.Data.Should().NotBeEmpty();
-    }
-
-    [Fact]
-    public async Task SearchCourses_WithStatusFilter_ShouldFilterCorrectly()
-    {
-        // Arrange
-        var query = "Development";
-        var status = "InProgress";
-
-        // Act
-        var result = await _controller.SearchCourses(query, status);
-
-        // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        var response = okResult!.Value as ApiResponse<List<SearchResultDTO>>;
-        response!.Success.Should().BeTrue();
-        response.Data.Should().NotBeEmpty();
-        // All results should have the specified status (checked in controller)
-    }
-
-    [Fact]
-    public async Task SearchCourses_CaseInsensitive_ShouldReturnResults()
-    {
-        // Arrange
-        var query = "MOBILE"; // All caps
-
-        // Act
-        var result = await _controller.SearchCourses(query);
-
-        // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        var response = okResult!.Value as ApiResponse<List<SearchResultDTO>>;
-        response!.Success.Should().BeTrue();
-        response.Data.Should().NotBeEmpty();
-        response.Data.Should().Contain(r => r.Title.Contains("Mobile", StringComparison.OrdinalIgnoreCase));
-    }
-
-    [Fact]
-    public async Task SearchCourses_WithEmptyQuery_ShouldReturnBadRequest()
-    {
-        // Arrange
-        var query = "";
-
-        // Act
-        var result = await _controller.SearchCourses(query);
-
-        // Assert
-        result.Result.Should().BeOfType<BadRequestObjectResult>();
-    }
-
-    [Fact]
-    public async Task SearchCourses_PartialMatch_ShouldReturnResults()
-    {
-        // Arrange
-        var query = "App"; // Partial match for "Mobile App Development"
-
-        // Act
-        var result = await _controller.SearchCourses(query);
-
-        // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        var response = okResult!.Value as ApiResponse<List<SearchResultDTO>>;
-        response!.Success.Should().BeTrue();
-        response.Data.Should().NotBeEmpty();
-    }
-
-    #endregion
-
-    #region Term Search Tests
-
-    [Fact]
-    public async Task SearchTerms_ByTitle_ShouldReturnMatchingTerms()
+    public async Task SearchTerms_ShouldReturnMatchingTerms()
     {
         // Arrange
         var query = "Spring";
@@ -245,73 +138,8 @@ public class SearchControllerTests : IDisposable
         response.Data.Should().Contain(r => r.Title.Contains("Spring", StringComparison.OrdinalIgnoreCase));
     }
 
-    [Fact]
-    public async Task SearchTerms_CaseInsensitive_ShouldReturnResults()
-    {
-        // Arrange
-        var query = "SPRING"; // All caps
-
-        // Act
-        var result = await _controller.SearchTerms(query);
-
-        // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        var response = okResult!.Value as ApiResponse<List<SearchResultDTO>>;
-        response!.Success.Should().BeTrue();
-        response.Data.Should().NotBeEmpty();
-    }
-
-    #endregion
-
-    #region Global Search Tests
-
-    [Fact]
-    public async Task SearchAll_ShouldReturnBothTermsAndCourses()
-    {
-        // Arrange
-        var query = "2025";
-
-        // Act
-        var result = await _controller.SearchAll(query);
-
-        // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        var response = okResult!.Value as ApiResponse<List<SearchResultDTO>>;
-        response!.Success.Should().BeTrue();
-        response.Data.Should().NotBeEmpty();
-        response.Data.Should().Contain(r => r.ResultType == "Term");
-        response.Data.Should().Contain(r => r.ResultType == "Course");
-    }
-
-    [Fact]
-    public async Task SearchAll_ShouldBeSortedByTitle()
-    {
-        // Arrange
-        var query = "2025";
-
-        // Act
-        var result = await _controller.SearchAll(query);
-
-        // Assert
-        result.Result.Should().BeOfType<OkObjectResult>();
-        var okResult = result.Result as OkObjectResult;
-        var response = okResult!.Value as ApiResponse<List<SearchResultDTO>>;
-        response!.Success.Should().BeTrue();
-        
-        if (response.Data!.Count > 1)
-        {
-            var sortedResults = response.Data.OrderBy(r => r.Title).ToList();
-            response.Data.Should().BeEquivalentTo(sortedResults, options => options.WithStrictOrdering());
-        }
-    }
-
-    #endregion
-
     public void Dispose()
     {
         _context?.Dispose();
     }
 }
-

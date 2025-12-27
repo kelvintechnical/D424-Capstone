@@ -6,11 +6,11 @@ using StudentLifeTracker.API.Controllers;
 using StudentLifeTracker.API.Data;
 using StudentLifeTracker.API.Models;
 using StudentLifeTracker.Shared.DTOs;
-using StudentLifeTracker.Tests.Helpers;
+using StudentProgressTracker.Tests.Helpers;
 using System.Security.Claims;
 using Xunit;
 
-namespace StudentLifeTracker.Tests.Controllers;
+namespace StudentProgressTracker.Tests.Controllers;
 
 public class TermsControllerTests : IDisposable
 {
@@ -111,8 +111,8 @@ public class TermsControllerTests : IDisposable
         var result = await _controller.CreateTerm(termDto);
 
         // Assert
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-        var response = Assert.IsType<ApiResponse<TermDTO>>(createdResult.Value);
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var response = Assert.IsType<ApiResponse<TermDTO>>(okResult.Value);
         Assert.True(response.Success);
         Assert.NotNull(response.Data);
         Assert.Equal("Summer 2026", response.Data.Title);

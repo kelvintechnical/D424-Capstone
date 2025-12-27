@@ -112,6 +112,20 @@
                            IsVisible="{Binding ProjectionResult, Converter={StaticResource IsStringNotEmptyConverter}}" />
                 </VerticalStackLayout>
             </Frame>
+
+            <Button Text="📊 Export Term GPA Report (CSV)"
+                    Command="{Binding ExportTermGpaCommand}"
+                    BackgroundColor="#2563EB"
+                    TextColor="White"
+                    CornerRadius="8"
+                    Margin="10,10,10,0" />
+
+            <Button Text="📄 Export Full Transcript (CSV)" 
+                    Command="{Binding ExportTranscriptCommand}"
+                    BackgroundColor="#6B21A8"
+                    TextColor="White"
+                    CornerRadius="8"
+                    Margin="10,20,10,10" />
         </VerticalStackLayout>
     </ScrollView>
     

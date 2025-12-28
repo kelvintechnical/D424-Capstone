@@ -251,6 +251,51 @@ public partial class TermDetailViewModel : ObservableObject
 		await Shell.Current.GoToAsync("..");
 	}
 
+	[RelayCommand]
+	private async Task ExportTermGpaAsync()
+	{
+		if (Term == null || Term.Id <= 0)
+		{
+			await Shell.Current.DisplayAlert("Error", "Invalid term. Please save the term first.", "OK");
+			return;
+		}
+
+		try
+		{
+			IsLoading = true;
+
+			var csvBytes = await _apiService.DownloadGpaReportCsvAsync(Term.Id);
+
+			if (csvBytes == null || csvBytes.Length == 0)
+			{
+				await Shell.Current.DisplayAlert("Error", "No grades found for this term.", "OK");
+				return;
+			}
+
+			// Use term title for filename
+			string termTitle = Term.Title.Replace(" ", "_");
+			var fileName = $"GPA_Report_{termTitle}_{DateTime.Now:yyyyMMdd}.csv";
+			var filePath = Path.Combine(FileSystem.Current.CacheDirectory, fileName);
+
+			await File.WriteAllBytesAsync(filePath, csvBytes);
+
+			await Share.Default.RequestAsync(new ShareFileRequest
+			{
+				Title = $"Export GPA Report - {Term.Title}",
+				File = new ShareFile(filePath)
+			});
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"Export error: {ex.Message}");
+			await Shell.Current.DisplayAlert("Error", $"Failed to export: {ex.Message}", "OK");
+		}
+		finally
+		{
+			IsLoading = false;
+		}
+	}
+
 	/// <summary>
 	/// Called when StartDate property changes. Validates the date and reverts if invalid.
 	/// </summary>

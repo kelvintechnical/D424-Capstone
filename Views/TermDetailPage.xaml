@@ -45,6 +45,15 @@
                     </Grid>
                 </VerticalStackLayout>
 
+                <!-- CSV Export Button -->
+                <Button Text="📊 Export Term GPA Report (CSV)" 
+                        Command="{Binding ExportTermGpaCommand}"
+                        BackgroundColor="#7C3AED"
+                        TextColor="White"
+                        CornerRadius="8"
+                        Margin="0,16,0,0"
+                        IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}" />
+
                 <Grid ColumnDefinitions="*,Auto" VerticalOptions="End" Margin="0,16,0,0">
                     <ActivityIndicator IsVisible="{Binding IsSaving}" IsRunning="{Binding IsSaving}" />
                     <HorizontalStackLayout Grid.Column="1" Spacing="12">

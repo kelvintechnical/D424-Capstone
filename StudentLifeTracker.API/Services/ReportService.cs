@@ -76,19 +76,37 @@ public class ReportService
 
         foreach (var term in terms)
         {
+            // Get all courses for the term
+            var termCourses = await _context.Courses
+                .Where(c => c.TermId == term.Id)
+                .ToListAsync();
+
+            // Get all grades for the term
             var grades = await _context.Grades
-                .Include(g => g.Course)
                 .Where(g => g.Course.TermId == term.Id)
                 .ToListAsync();
 
-            var courses = grades.Select(g => new GpaReportCourseDTO
+            // Create a dictionary for quick grade lookup by course ID
+            var gradesByCourseId = grades.ToDictionary(g => g.CourseId);
+
+            // Build course list with comprehensive data
+            var courses = termCourses.Select(course =>
             {
-                CourseTitle = g.Course.Title,
-                CreditHours = g.CreditHours,
-                LetterGrade = g.LetterGrade,
-                GradePoints = ConvertLetterToPoints(g.LetterGrade)
+                var grade = gradesByCourseId.ContainsKey(course.Id) ? gradesByCourseId[course.Id] : null;
+                return new GpaReportCourseDTO
+                {
+                    CourseTitle = course.Title,
+                    CreditHours = grade?.CreditHours ?? course.CreditHours,
+                    LetterGrade = grade?.LetterGrade ?? string.Empty,
+                    GradePoints = grade != null ? ConvertLetterToPoints(grade.LetterGrade) : 0.0,
+                    Status = course.Status,
+                    Percentage = grade?.Percentage,
+                    InstructorName = course.InstructorName,
+                    InstructorEmail = course.InstructorEmail
+                };
             }).ToList();
 
+            // Calculate term GPA and credit hours only for courses with grades
             var termCreditHours = grades.Sum(g => g.CreditHours);
             var termGPA = CalculateGPA(grades);
 
@@ -155,39 +173,74 @@ public class ReportService
     {
         var csv = new StringBuilder();
 
-        // Header
-        csv.AppendLine(report.ReportTitle);
-        csv.AppendLine($"Generated: {report.GeneratedAt:yyyy-MM-dd HH:mm:ss UTC}");
-        csv.AppendLine($"Student: {report.StudentName} ({report.StudentEmail})");
-        csv.AppendLine(); // Empty line
+        // Header section
+        csv.AppendLine("=====================================");
+        csv.AppendLine("STUDENT PROGRESS TRACKER");
+        csv.AppendLine("ACADEMIC TRANSCRIPT");
+        csv.AppendLine($"Generated: {report.GeneratedAt:MMMM dd, yyyy 'at' h:mm tt}");
+        csv.AppendLine($"Student: {report.StudentName}");
+        csv.AppendLine($"Email: {report.StudentEmail}");
+        csv.AppendLine();
+
+        // Academic Summary
+        int totalCourses = report.Terms.Sum(t => t.Courses.Count);
+        csv.AppendLine("ACADEMIC SUMMARY");
+        csv.AppendLine($"Total Terms: {report.Terms.Count}");
+        csv.AppendLine($"Total Courses: {totalCourses}");
+        csv.AppendLine($"Total Credits Earned: {report.TotalCreditHours}");
+        csv.AppendLine($"Cumulative GPA: {report.CumulativeGPA:F2}");
+        csv.AppendLine();
 
         // Process each term
         foreach (var term in report.Terms)
         {
-            csv.AppendLine($"Term: {term.TermTitle}");
-            csv.AppendLine($"Term Dates: {term.TermStartDate:yyyy-MM-dd} to {term.TermEndDate:yyyy-MM-dd}");
-            csv.AppendLine(); // Empty line
-
-            // Column headers
-            csv.AppendLine("Course Title,Credit Hours,Letter Grade,Grade Points");
+            csv.AppendLine($"TERM: {term.TermTitle}");
+            csv.AppendLine($"Start: {term.TermStartDate:MMM dd, yyyy} | End: {term.TermEndDate:MMM dd, yyyy}");
+            csv.AppendLine($"Term GPA: {term.TermGPA:F2}");
+            
+            // Column headers for courses
+            csv.AppendLine("Course,Status,Credits,Grade,Percentage,Instructor,Email");
 
             // Course rows
             foreach (var course in term.Courses)
             {
-                csv.AppendLine($"{EscapeCsvField(course.CourseTitle)},{course.CreditHours},{course.LetterGrade},{course.GradePoints:F2}");
+                // Format status (display name)
+                string status = FormatCourseStatus(course.Status);
+                
+                // Format percentage
+                string percentage = course.Percentage.HasValue 
+                    ? $"{course.Percentage.Value:F0}%" 
+                    : string.Empty;
+                
+                // Format grade (empty if no grade)
+                string grade = !string.IsNullOrEmpty(course.LetterGrade) ? course.LetterGrade : string.Empty;
+                
+                // Instructor name and email
+                string instructorName = course.InstructorName ?? string.Empty;
+                string instructorEmail = course.InstructorEmail ?? string.Empty;
+
+                csv.AppendLine($"{EscapeCsvField(course.CourseTitle)},{EscapeCsvField(status)},{course.CreditHours},{grade},{percentage},{EscapeCsvField(instructorName)},{EscapeCsvField(instructorEmail)}");
             }
 
-            // Term summary
-            csv.AppendLine(); // Empty line
-            csv.AppendLine($"Term Credit Hours,{term.TermCreditHours},,Term GPA,{term.TermGPA:F2}");
             csv.AppendLine(); // Empty line between terms
         }
 
-        // Overall summary
-        csv.AppendLine("CUMULATIVE SUMMARY");
-        csv.AppendLine($"Total Credit Hours,{report.TotalCreditHours},,Cumulative GPA,{report.CumulativeGPA:F2}");
-
         return csv.ToString();
+    }
+
+    private string FormatCourseStatus(string? status)
+    {
+        if (string.IsNullOrEmpty(status))
+            return "In Progress";
+            
+        return status switch
+        {
+            "InProgress" => "In Progress",
+            "Completed" => "Completed",
+            "Dropped" => "Dropped",
+            "PlanToTake" => "Plan To Take",
+            _ => status
+        };
     }
 
     private double CalculateGPA(List<Grade> grades)

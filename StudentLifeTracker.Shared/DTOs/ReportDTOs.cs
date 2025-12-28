@@ -20,6 +20,11 @@ public class GpaReportCourseDTO
     public int CreditHours { get; set; }
     public string LetterGrade { get; set; } = string.Empty;
     public double GradePoints { get; set; }
+    // Additional fields for comprehensive transcript reports
+    public string? Status { get; set; }
+    public decimal? Percentage { get; set; }
+    public string? InstructorName { get; set; }
+    public string? InstructorEmail { get; set; }
 }
 
 public class TranscriptReportDTO

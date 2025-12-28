@@ -126,6 +126,16 @@
                 </CollectionView>
             </VerticalStackLayout>
 
+            <!-- Export Button -->
+            <Button Text="📄 Export Financial Report (CSV)" 
+                    Command="{Binding ExportFinancialReportCommand}"
+                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
+                    BackgroundColor="#6B21A8"
+                    TextColor="White"
+                    CornerRadius="8"
+                    Margin="10,20,10,10"
+                    HeightRequest="50" />
+
             <!-- Loading Indicator -->
             <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
         </VerticalStackLayout>

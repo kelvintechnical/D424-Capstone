@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using StudentLifeTracker.Shared.DTOs;
 using StudentProgressTracker.Services;
 using System.Collections.ObjectModel;
+using System.Text;
 
 namespace StudentProgressTracker.ViewModels;
 
@@ -148,6 +149,141 @@ public partial class FinancialViewModel : ObservableObject
 		{
 			await Shell.Current.GoToAsync($"//{nameof(Views.TermsPage)}");
 		}
+	}
+
+	[RelayCommand]
+	private async Task ExportFinancialReportAsync()
+	{
+		try
+		{
+			IsLoading = true;
+
+			// Get user info
+			var user = await _apiService.GetUserAsync();
+			if (user == null)
+			{
+				await Shell.Current.DisplayAlert("Error", "User information not available. Please log in again.", "OK");
+				return;
+			}
+
+			// Get all incomes and expenses for the date range (not just recent 5)
+			var allIncomes = await _financialService.GetIncomesAsync(StartDate, EndDate);
+			var allExpenses = await _financialService.GetExpensesAsync(StartDate, EndDate);
+			var categories = await _financialService.GetCategoriesAsync();
+
+			// Create a dictionary for category lookup
+			var categoryDict = categories.ToDictionary(c => c.Id, c => c.Name);
+
+			// Build CSV
+			var csv = new StringBuilder();
+
+			// Header
+			csv.AppendLine("=====================================");
+			csv.AppendLine("STUDENT PROGRESS TRACKER");
+			csv.AppendLine("FINANCIAL REPORT");
+			csv.AppendLine($"Generated: {DateTime.Now:MMMM dd, yyyy 'at' h:mm tt}");
+			csv.AppendLine($"Student: {user.Name}");
+			csv.AppendLine($"Report Period: {StartDate:MMM dd, yyyy} - {EndDate:MMM dd, yyyy}");
+			csv.AppendLine();
+
+			// Summary
+			if (Summary == null)
+			{
+				// Calculate summary if not available
+				var summary = await _financialService.GetFinancialSummaryAsync(StartDate, EndDate);
+				if (summary != null)
+				{
+					Summary = summary;
+				}
+			}
+
+			csv.AppendLine("FINANCIAL SUMMARY");
+			csv.AppendLine($"Total Income: {FormatCurrency(Summary?.TotalIncome ?? 0)}");
+			csv.AppendLine($"Total Expenses: {FormatCurrency(Summary?.TotalExpenses ?? 0)}");
+			csv.AppendLine($"Net Amount: {FormatCurrency(Summary?.NetAmount ?? 0)}");
+			csv.AppendLine();
+
+			// Income entries
+			csv.AppendLine("INCOME ENTRIES");
+			csv.AppendLine("Date,Source,Amount");
+
+			if (allIncomes != null && allIncomes.Any())
+			{
+				foreach (var income in allIncomes.OrderByDescending(i => i.Date))
+				{
+					string amount = FormatCurrency(income.Amount);
+					csv.AppendLine($"{income.Date:MMM dd, yyyy},{EscapeCsvField(income.Source)},{amount}");
+				}
+			}
+			else
+			{
+				csv.AppendLine("No income recorded");
+			}
+			csv.AppendLine();
+
+			// Expense entries
+			csv.AppendLine("EXPENSE ENTRIES");
+			csv.AppendLine("Date,Category,Description,Amount");
+
+			if (allExpenses != null && allExpenses.Any())
+			{
+				foreach (var expense in allExpenses.OrderByDescending(e => e.Date))
+				{
+					string categoryName = categoryDict.ContainsKey(expense.CategoryId) 
+						? categoryDict[expense.CategoryId] 
+						: "Unknown";
+					string amount = FormatCurrency(expense.Amount);
+					csv.AppendLine($"{expense.Date:MMM dd, yyyy},{EscapeCsvField(categoryName)},{EscapeCsvField(expense.Description)},{amount}");
+				}
+			}
+			else
+			{
+				csv.AppendLine("No expenses recorded");
+			}
+
+			// Save and share
+			var fileName = $"Financial_Report_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+			var filePath = Path.Combine(FileSystem.Current.CacheDirectory, fileName);
+
+			await File.WriteAllTextAsync(filePath, csv.ToString());
+
+			await Share.Default.RequestAsync(new ShareFileRequest
+			{
+				Title = "Export Financial Report",
+				File = new ShareFile(filePath)
+			});
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"Export error: {ex.Message}");
+			await Shell.Current.DisplayAlert("Error", $"Export failed: {ex.Message}", "OK");
+		}
+		finally
+		{
+			IsLoading = false;
+		}
+	}
+
+	private string EscapeCsvField(string field)
+	{
+		if (string.IsNullOrEmpty(field))
+			return string.Empty;
+
+		// If field contains comma, quote, or newline, wrap in quotes and escape quotes
+		if (field.Contains(',') || field.Contains('"') || field.Contains('\n') || field.Contains('\r'))
+		{
+			return $"\"{field.Replace("\"", "\"\"")}\"";
+		}
+
+		return field;
+	}
+
+	private string FormatCurrency(decimal amount)
+	{
+		// Format as currency with $ sign and 2 decimal places
+		// Use ToString("C2") which includes currency symbol, commas, and 2 decimals
+		// Then escape it since it may contain commas
+		return EscapeCsvField(amount.ToString("C2"));
 	}
 }
 

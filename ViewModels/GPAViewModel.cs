@@ -203,6 +203,104 @@ public partial class GPAViewModel : ObservableObject
 			await Shell.Current.GoToAsync($"//{nameof(Views.TermsPage)}");
 		}
 	}
+
+	[RelayCommand]
+	private async Task ExportTranscriptAsync()
+	{
+		try
+		{
+			IsLoading = true;
+
+			var csvBytes = await _apiService.DownloadTranscriptCsvAsync();
+
+			if (csvBytes == null || csvBytes.Length == 0)
+			{
+				await Shell.Current.DisplayAlert("Error", "No data to export. Add some courses with grades first.", "OK");
+				return;
+			}
+
+			// Create filename with timestamp
+			var fileName = $"Transcript_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+			var filePath = Path.Combine(FileSystem.Current.CacheDirectory, fileName);
+
+			// Write file
+			await File.WriteAllBytesAsync(filePath, csvBytes);
+
+			// Share/save the file
+			await Share.Default.RequestAsync(new ShareFileRequest
+			{
+				Title = "Export Academic Transcript",
+				File = new ShareFile(filePath)
+			});
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"Export error: {ex.Message}");
+			await Shell.Current.DisplayAlert("Error", $"Failed to export: {ex.Message}", "OK");
+		}
+		finally
+		{
+			IsLoading = false;
+		}
+	}
+
+	[RelayCommand]
+	private async Task ExportTermGpaAsync()
+	{
+		if (SelectedTermId == null || !SelectedTermId.HasValue)
+		{
+			await Shell.Current.DisplayAlert("Error", "Please select a term first", "OK");
+			return;
+		}
+
+		try
+		{
+			IsLoading = true;
+
+			var csvBytes = await _apiService.DownloadGpaReportCsvAsync(SelectedTermId.Value);
+
+			if (csvBytes == null || csvBytes.Length == 0)
+			{
+				await Shell.Current.DisplayAlert("Error", "No grades found for this term.", "OK");
+				return;
+			}
+
+			// Try to get term title for filename
+			string termTitle = $"Term_{SelectedTermId.Value}";
+			try
+			{
+				var termResponse = await _apiService.GetTermAsync(SelectedTermId.Value);
+				if (termResponse.Success && termResponse.Data != null)
+				{
+					termTitle = termResponse.Data.Title.Replace(" ", "_");
+				}
+			}
+			catch
+			{
+				// If we can't get term title, use the default
+			}
+
+			var fileName = $"GPA_Report_{termTitle}_{DateTime.Now:yyyyMMdd}.csv";
+			var filePath = Path.Combine(FileSystem.Current.CacheDirectory, fileName);
+
+			await File.WriteAllBytesAsync(filePath, csvBytes);
+
+			await Share.Default.RequestAsync(new ShareFileRequest
+			{
+				Title = $"Export GPA Report - {termTitle.Replace("_", " ")}",
+				File = new ShareFile(filePath)
+			});
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"Export error: {ex.Message}");
+			await Shell.Current.DisplayAlert("Error", $"Failed to export: {ex.Message}", "OK");
+		}
+		finally
+		{
+			IsLoading = false;
+		}
+	}
 }
 
 public class CourseGradeInfo

@@ -48,6 +48,7 @@ A unified, cross-platform application that consolidates all academic and financi
 - Track term start and end dates
 - Organize courses by term
 - View term summaries with course counts
+- Export term GPA reports directly from Term Detail page (CSV format)
 
 #### Course Management
 - **Course Information:**
@@ -164,19 +165,44 @@ A unified, cross-platform application that consolidates all academic and financi
 
 ### Reporting & Analytics
 
-#### GPA Reports
-- Term-based GPA reports
-- Course list with grades
-- Credit hour summary
-- GPA calculation breakdown
-- Export to CSV format
+#### Academic Transcript Export (CSV)
+- **Location:** GPA Calculator page
+- **Comprehensive Report Format:**
+  - Header with title, generation timestamp, student name, and email
+  - Academic Summary section (Total Terms, Total Courses, Total Credits Earned, Cumulative GPA)
+  - Detailed term-by-term breakdown:
+    - Term name, start and end dates
+    - Term GPA calculation
+    - Course details: Course name, Status, Credits, Grade, Percentage, Instructor Name, Instructor Email
+  - Includes all courses (even those without grades)
+  - Export button: "📄 Export Transcript (CSV)"
 
-#### Transcript Reports
-- Complete academic transcript
-- All terms and courses
-- Cumulative GPA
-- Total credit hours
-- Export to CSV format
+#### Term GPA Report Export (CSV)
+- **Location:** GPA Calculator page and Term Detail page
+- **Per-Term Reports:**
+  - Term-specific GPA report
+  - Course list with grades for selected term
+  - Credit hour summary
+  - GPA calculation breakdown
+  - Export buttons: "📊 Export Current Term GPA (CSV)" (GPA page) and "📊 Export Term GPA Report (CSV)" (Term Detail page)
+
+#### Financial Report Export (CSV)
+- **Location:** Financial Overview page
+- **Comprehensive Financial Report Format:**
+  - Header with title, generation timestamp, student name, and report period
+  - Financial Summary section (Total Income, Total Expenses, Net Amount)
+  - Income Entries: Date, Source, Amount (sorted by date, most recent first)
+  - Expense Entries: Date, Category, Description, Amount (sorted by date, most recent first)
+  - Includes all income and expense entries for the selected date range
+  - Export button: "📄 Export Financial Report (CSV)"
+
+#### Export Features
+- CSV files include comprehensive data with multiple columns and rows
+- Proper CSV formatting with field escaping for commas and special characters
+- Date-time stamps in readable format (e.g., "December 28, 2025 at 2:30 PM")
+- Descriptive titles and section headers
+- Platform-native file sharing (save, email, or share via device share sheet)
+- Filenames include timestamps for easy organization
 
 ### Notifications
 
@@ -554,6 +580,10 @@ dotnet ef database update
 **Note:** All endpoints except `/api/auth/*` require JWT authentication. Include the token in the `Authorization` header: `Bearer <your-token>`
 
 **Recent Updates:**
+- **Comprehensive CSV Export** (December 28, 2025):
+  - Enhanced Academic Transcript export with complete academic summary and all course details
+  - Added Term GPA export button to Term Detail page for centralized access
+  - New Financial Report export with complete income/expense details
 - Fixed date filtering in Financial endpoints to properly include all records within selected date ranges
 - Added delete functionality for Income and Expense entries
 - Financial Overview page automatically refreshes when navigating back to it
@@ -775,10 +805,10 @@ For technical questions or issues:
 
 ## Version
 
-- **Application Version:** 1.0
+- **Application Version:** 1.1
 - **.NET MAUI:** 9.0.0
 - **ASP.NET Core:** 8.0.0
-- **Last Updated:** December 2025
+- **Last Updated:** December 28, 2025
 
 ---
 

@@ -119,6 +119,7 @@ The application follows a **3-tier client-server architecture**:
 - View all terms in chronological order
 - Course count per term
 - Term-based organization
+- CSV export: Export term-specific GPA report directly from Term Detail page
 
 ### 3. Course Management
 
@@ -213,22 +214,51 @@ The application follows a **3-tier client-server architecture**:
 
 ### 8. Reporting & Export
 
-**GPA Reports**
-- Term-based GPA reports
-- Course list with grades
+**Academic Transcript Export (CSV)**
+- **Location:** GPA Calculator page
+- **Comprehensive Format:**
+  - Header section with title, generation timestamp (formatted: "December 28, 2025 at 2:30 PM"), student name, and email
+  - Academic Summary: Total Terms, Total Courses, Total Credits Earned, Cumulative GPA
+  - Term-by-term breakdown:
+    - Term header with name, start date, end date, and Term GPA
+    - Course rows with: Course, Status, Credits, Grade, Percentage, Instructor, Email
+    - Includes ALL courses (not just those with grades)
+    - Course status formatting (In Progress, Completed, Dropped, Plan To Take)
+    - Percentage grades formatted with % symbol
+  - Proper CSV field escaping for commas, quotes, and special characters
+
+**Term GPA Report Export (CSV)**
+- **Locations:** 
+  - GPA Calculator page: "📊 Export Current Term GPA (CSV)" button
+  - Term Detail page: "📊 Export Term GPA Report (CSV)" button (centrally located for evaluator access)
+- Term-specific GPA reports with course grades
 - Credit hour summary
 - GPA calculation breakdown
 
-**Transcript Reports**
-- Complete academic transcript
-- All terms and courses
-- Cumulative GPA
-- CSV export functionality
+**Financial Report Export (CSV)**
+- **Location:** Financial Overview page
+- **Comprehensive Format:**
+  - Header section with title, generation timestamp, student name, and report period dates
+  - Financial Summary: Total Income, Total Expenses, Net Amount (currency formatted)
+  - Income Entries section:
+    - Headers: Date, Source, Amount
+    - All income entries for selected date range (sorted by date, descending)
+    - Currency formatting with $ symbol and commas
+  - Expense Entries section:
+    - Headers: Date, Category, Description, Amount
+    - All expense entries for selected date range (sorted by date, descending)
+    - Category names resolved from CategoryId
+    - Currency formatting with $ symbol and commas
+  - Proper CSV field escaping
 
-**Export Formats**
-- CSV file generation
-- Filename includes term/date
-- Platform file sharing
+**Export Implementation Details**
+- CSV files generated server-side (transcript) or client-side (financial)
+- Proper CSV formatting with field escaping for special characters
+- Date-time stamps in human-readable format
+- Currency formatting with proper escaping for CSV compatibility
+- Platform-native file sharing via MAUI Share API
+- Filenames include timestamps: `Transcript_YYYYMMDD_HHMMSS.csv`, `Financial_Report_YYYYMMDD_HHMMSS.csv`
+- Files saved to app cache directory and shared via platform share sheet
 
 ### 9. Data Synchronization (Architecture Support)
 
@@ -586,7 +616,10 @@ Based on file modification history:
 - ✅ Push notifications (Android/iOS)
 - ✅ GPA calculation with grade projections
 - ✅ Advanced search functionality
-- ✅ Report generation with CSV export
+- ✅ Comprehensive report generation with CSV export:
+  - Academic Transcript (all terms, courses, grades, instructors)
+  - Term-specific GPA reports (accessible from GPA page and Term Detail page)
+  - Financial Reports (income, expenses, categories with summaries)
 - ✅ Financial tracking (income, expenses, categories)
 - ✅ Offline-first with cloud sync capability
 - ✅ Secure JWT-based API
@@ -903,7 +936,36 @@ This document provides a comprehensive technical overview suitable for due dilig
 
 ## Recent Updates (December 2025)
 
-### Financial Module Enhancements
+### Comprehensive CSV Export Functionality (December 28, 2025)
+- **Academic Transcript Export**: 
+  - Enhanced transcript CSV to include comprehensive academic summary (Total Terms, Total Courses, Total Credits, Cumulative GPA)
+  - All courses included (even without grades) with status, percentage, instructor name, and email
+  - Improved CSV format matching professional transcript standards
+  - Export button updated to "📄 Export Transcript (CSV)" on GPA page
+  
+- **Term Detail Page CSV Export**: 
+  - Added "📊 Export Term GPA Report (CSV)" button to Term Detail page
+  - Centrally located export button for easy evaluator access
+  - Enables term-specific GPA report export directly from term view
+
+- **Financial Report Export**:
+  - New comprehensive financial report CSV export on Financial Overview page
+  - Includes header with student info, report period, and generation timestamp
+  - Financial Summary section with Total Income, Total Expenses, Net Amount
+  - Complete Income Entries list (Date, Source, Amount) for date range
+  - Complete Expense Entries list (Date, Category, Description, Amount) for date range
+  - Proper currency formatting and CSV field escaping
+  - Export button: "📄 Export Financial Report (CSV)"
+
+- **Technical Implementation**:
+  - Extended `GpaReportCourseDTO` with Status, Percentage, InstructorName, InstructorEmail fields
+  - Updated `ReportService.GenerateTranscriptReportAsync` to include all courses (not just graded)
+  - Rewrote `GenerateTranscriptCsv` method for comprehensive format
+  - Added `ExportFinancialReportCommand` to `FinancialViewModel`
+  - Added `FormatCourseStatus` helper method for status display formatting
+  - CSV field escaping utilities for proper formatting
+
+### Financial Module Enhancements (December 26, 2025)
 - **Date Filtering Fix**: Fixed date range filtering in Financial API endpoints to properly normalize dates (start of day to end of day) ensuring all records within selected date ranges are included in calculations
 - **Delete Functionality**: Added delete buttons and functionality for Income and Expense entries in the client UI
 - **Auto-Refresh**: Financial Overview page automatically refreshes when navigating back to it via `OnAppearing` lifecycle method
@@ -918,8 +980,8 @@ This document provides a comprehensive technical overview suitable for due dilig
 
 ---
 
-*Document Version: 1.1*  
-*Last Updated: December 26, 2025*  
+*Document Version: 1.2*  
+*Last Updated: December 28, 2025*  
 *Created for: Potential purchaser technical evaluation*
 
 

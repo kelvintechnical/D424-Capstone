@@ -89,7 +89,7 @@ ax.text(5, 3.7, 'Azure SQL Database',
 
 # Database tables
 db_components = [
-    ('Tables:\nTerms, Courses,\nAssessments,\nGrades, Income,\nExpenses', 5, 2.5)
+    ('Tables:\nTerms, Courses,\nAssessments,\nGrades, Income,\nExpenses,\nCategories', 5, 2.5)
 ]
 
 for text, x, y in db_components:

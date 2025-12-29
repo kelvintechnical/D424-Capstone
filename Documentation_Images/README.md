@@ -26,12 +26,13 @@ This folder contains professional documentation diagrams generated for the WGU S
 
 ### 3. `database_erd.png`
 **Entity Relationship Diagram (ERD)**
-- **Resolution:** 2400x1600 pixels (300 DPI)
+- **Resolution:** 3000x2100 pixels (300 DPI)
 - **Description:** Database schema diagram showing:
-  - All tables: Terms, Courses, Assessments, Grades, Income, Expenses
+  - All tables: AspNetUsers, Terms, Courses, Assessments, Grades, Income, Expenses, Categories
   - Primary Keys (PK) and Foreign Keys (FK)
   - Relationships with crow's foot notation (1:M)
   - Complete field listings for each table
+  - All relationships including User-to-entity relationships and Category-to-Expense relationship
 
 ### 4. `mvvm_pattern.png`
 **MVVM Pattern Architecture Diagram**

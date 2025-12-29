@@ -1,24 +1,25 @@
 """
 Generate Entity Relationship Diagram (ERD) for Student Progress Tracker
+CORRECTED VERSION - Includes all relationships and missing tables
 """
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Rectangle
 import numpy as np
 
-# Set up the figure
-fig, ax = plt.subplots(figsize=(16, 10.67), dpi=150)  # 2400x1600 at 150 DPI
-ax.set_xlim(0, 12)
-ax.set_ylim(0, 10)
+# Set up the figure - larger to fit all tables
+fig, ax = plt.subplots(figsize=(20, 14), dpi=150)  # 3000x2100 at 150 DPI
+ax.set_xlim(0, 16)
+ax.set_ylim(0, 12)
 ax.axis('off')
 
-# Color scheme
+# Color scheme - darker line color for visibility
 colors = {
     'table': '#3498DB',
     'pk': '#E74C3C',
     'fk': '#F39C12',
     'text': '#2C3E50',
-    'line': '#7F8C8D',
+    'line': '#34495E',  # Darker gray for better visibility
     'bg': '#FFFFFF'
 }
 
@@ -67,87 +68,101 @@ def draw_table(ax, x, y, name, fields, pk_fields, fk_fields=None):
     
     return x, y, box_width, box_height
 
-# Draw tables
+# Draw tables with better positioning
+# User table (AspNetUsers) - top center
+user_x, user_y = 8, 10.5
+user_fields = ['Id', 'Email', 'UserName', 'PasswordHash']
+user_pk = ['Id']
+draw_table(ax, user_x, user_y, 'AspNetUsers', user_fields, user_pk)
+
 # Terms table
-terms_x, terms_y = 2, 7
-terms_fields = ['TermId', 'Name', 'StartDate', 'EndDate', 'Status']
-terms_pk = ['TermId']
-draw_table(ax, terms_x, terms_y, 'Terms', terms_fields, terms_pk)
+terms_x, terms_y = 2, 8
+terms_fields = ['Id', 'UserId', 'Title', 'StartDate', 'EndDate']
+terms_pk = ['Id']
+terms_fk = ['UserId']
+draw_table(ax, terms_x, terms_y, 'Terms', terms_fields, terms_pk, terms_fk)
 
 # Courses table
-courses_x, courses_y = 6, 7
-courses_fields = ['CourseId', 'TermId', 'CourseName', 'CourseCode', 
-                  'InstructorName', 'InstructorEmail', 'CreditHours', 
-                  'StartDate', 'EndDate', 'Status']
-courses_pk = ['CourseId']
+courses_x, courses_y = 6, 8
+courses_fields = ['Id', 'TermId', 'Title', 'InstructorName', 
+                  'InstructorEmail', 'CreditHours', 'StartDate', 'EndDate', 'Status']
+courses_pk = ['Id']
 courses_fk = ['TermId']
 draw_table(ax, courses_x, courses_y, 'Courses', courses_fields, courses_pk, courses_fk)
 
 # Assessments table
-assessments_x, assessments_y = 10, 7
-assessments_fields = ['AssessmentId', 'CourseId', 'AssessmentName', 
-                     'AssessmentType', 'Weight', 'DueDate']
-assessments_pk = ['AssessmentId']
+assessments_x, assessments_y = 10, 8
+assessments_fields = ['Id', 'CourseId', 'Name', 'Type', 'StartDate', 'DueDate']
+assessments_pk = ['Id']
 assessments_fk = ['CourseId']
 draw_table(ax, assessments_x, assessments_y, 'Assessments', 
           assessments_fields, assessments_pk, assessments_fk)
 
-# Grades table
-grades_x, grades_y = 10, 4
-grades_fields = ['GradeId', 'AssessmentId', 'Score', 'LetterGrade', 'DateRecorded']
-grades_pk = ['GradeId']
-grades_fk = ['AssessmentId']
+# Grades table - CORRECTED: links to Course, not Assessment
+grades_x, grades_y = 6, 5.5
+grades_fields = ['Id', 'CourseId', 'LetterGrade', 'Percentage', 'CreditHours']
+grades_pk = ['Id']
+grades_fk = ['CourseId']
 draw_table(ax, grades_x, grades_y, 'Grades', grades_fields, grades_pk, grades_fk)
 
 # Income table
-income_x, income_y = 2, 4
-income_fields = ['IncomeId', 'Source', 'Amount', 'Date', 'Category']
-income_pk = ['IncomeId']
-draw_table(ax, income_x, income_y, 'Income', income_fields, income_pk)
+income_x, income_y = 2, 5.5
+income_fields = ['Id', 'UserId', 'Source', 'Amount', 'Date']
+income_pk = ['Id']
+income_fk = ['UserId']
+draw_table(ax, income_x, income_y, 'Income', income_fields, income_pk, income_fk)
+
+# Categories table - ADDED
+categories_x, categories_y = 10, 5.5
+categories_fields = ['Id', 'UserId', 'Name', 'IsCustom']
+categories_pk = ['Id']
+categories_fk = ['UserId']
+draw_table(ax, categories_x, categories_y, 'Categories', categories_fields, categories_pk, categories_fk)
 
 # Expenses table
-expenses_x, expenses_y = 6, 4
-expenses_fields = ['ExpenseId', 'Description', 'Amount', 'Date', 'Category']
-expenses_pk = ['ExpenseId']
-draw_table(ax, expenses_x, expenses_y, 'Expenses', expenses_fields, expenses_pk)
+expenses_x, expenses_y = 6, 3
+expenses_fields = ['Id', 'UserId', 'CategoryId', 'Description', 'Amount', 'Date']
+expenses_pk = ['Id']
+expenses_fk = ['UserId', 'CategoryId']
+draw_table(ax, expenses_x, expenses_y, 'Expenses', expenses_fields, expenses_pk, expenses_fk)
 
-# Draw relationships (crow's foot notation)
-def draw_relationship(ax, from_x, from_y, to_x, to_y, label, side='right'):
+# Draw relationships (crow's foot notation) - THICKER LINES
+def draw_relationship(ax, from_x, from_y, to_x, to_y, label, side='right', linewidth=3):
     """Draw a relationship line with crow's foot notation"""
-    # Main line
+    # Main line - THICKER and DARKER
     ax.plot([from_x, to_x], [from_y, to_y], 
-           color=colors['line'], linewidth=2, zorder=1)
+           color=colors['line'], linewidth=linewidth, zorder=1, alpha=0.8)
     
     # Crow's foot at "many" end
     if side == 'right':
         # Draw crow's foot at to_x, to_y
-        foot_size = 0.15
+        foot_size = 0.2
         angle = np.arctan2(to_y - from_y, to_x - from_x)
         # Perpendicular direction
         perp_angle = angle + np.pi/2
         
         # Three lines for crow's foot
-        end_x = to_x - 0.3 * np.cos(angle)
-        end_y = to_y - 0.3 * np.sin(angle)
+        end_x = to_x - 0.4 * np.cos(angle)
+        end_y = to_y - 0.4 * np.sin(angle)
         
         # Left branch
         ax.plot([end_x, end_x - foot_size * np.cos(perp_angle)],
                [end_y, end_y - foot_size * np.sin(perp_angle)],
-               color=colors['line'], linewidth=2, zorder=2)
+               color=colors['line'], linewidth=linewidth, zorder=2, alpha=0.8)
         # Right branch
         ax.plot([end_x, end_x + foot_size * np.cos(perp_angle)],
                [end_y, end_y + foot_size * np.sin(perp_angle)],
-               color=colors['line'], linewidth=2, zorder=2)
+               color=colors['line'], linewidth=linewidth, zorder=2, alpha=0.8)
         # Center line
         ax.plot([end_x, to_x],
                [end_y, to_y],
-               color=colors['line'], linewidth=2, zorder=2)
+               color=colors['line'], linewidth=linewidth, zorder=2, alpha=0.8)
         
         # Single line at "one" end
-        start_x = from_x + 0.3 * np.cos(angle)
-        start_y = from_y + 0.3 * np.sin(angle)
+        start_x = from_x + 0.4 * np.cos(angle)
+        start_y = from_y + 0.4 * np.sin(angle)
         ax.plot([from_x, start_x], [from_y, start_y],
-               color=colors['line'], linewidth=2, zorder=2)
+               color=colors['line'], linewidth=linewidth, zorder=2, alpha=0.8)
     
     # Label
     mid_x = (from_x + to_x) / 2
@@ -156,18 +171,33 @@ def draw_relationship(ax, from_x, from_y, to_x, to_y, label, side='right'):
            bbox=dict(boxstyle='round,pad=0.3', facecolor='white', 
                     edgecolor=colors['line'], linewidth=1.5))
 
-# Relationships
+# Relationships - ALL relationships included
+# User (1) to Terms (many)
+draw_relationship(ax, user_x - 0.3, user_y - 0.5, terms_x + 0.3, terms_y + 0.5, '1:M', 'right')
+
 # Terms (1) to Courses (many)
 draw_relationship(ax, terms_x + 1.1, terms_y, courses_x - 1.1, courses_y, '1:M', 'right')
 
 # Courses (1) to Assessments (many)
 draw_relationship(ax, courses_x + 1.1, courses_y, assessments_x - 1.1, assessments_y, '1:M', 'right')
 
-# Assessments (1) to Grades (many)
-draw_relationship(ax, assessments_x, assessments_y - 0.7, grades_x, grades_y + 0.7, '1:M', 'right')
+# Courses (1) to Grades (many) - CORRECTED
+draw_relationship(ax, courses_x, courses_y - 0.7, grades_x, grades_y + 0.7, '1:M', 'right')
+
+# User (1) to Income (many)
+draw_relationship(ax, user_x - 0.3, user_y - 0.5, income_x + 0.3, income_y + 0.5, '1:M', 'right')
+
+# User (1) to Categories (many)
+draw_relationship(ax, user_x + 0.3, user_y - 0.5, categories_x - 0.3, categories_y + 0.5, '1:M', 'right')
+
+# User (1) to Expenses (many)
+draw_relationship(ax, user_x, user_y - 0.7, expenses_x, expenses_y + 0.7, '1:M', 'right')
+
+# Categories (1) to Expenses (many)
+draw_relationship(ax, categories_x, categories_y - 0.7, expenses_x, expenses_y + 0.7, '1:M', 'right')
 
 # Legend
-legend_x, legend_y = 1, 1.5
+legend_x, legend_y = 1, 2
 legend_items = [
     ('PK: Primary Key', colors['pk']),
     ('FK: Foreign Key', colors['fk']),
@@ -179,11 +209,10 @@ for i, (text, color) in enumerate(legend_items):
            fontsize=9, color=colors['text'])
 
 # Title
-ax.text(6, 9.5, 'Student Progress Tracker - Entity Relationship Diagram', 
+ax.text(8, 11.5, 'Student Progress Tracker - Entity Relationship Diagram', 
         ha='center', va='top', fontsize=18, fontweight='bold', color=colors['text'])
 
 plt.tight_layout()
 plt.savefig('database_erd.png', dpi=300, bbox_inches='tight', 
             facecolor='white', edgecolor='none', format='png')
 print("ERD diagram saved as database_erd.png")
-

@@ -394,28 +394,36 @@ A unified, cross-platform application that consolidates all academic and financi
 
 ## Project Structure
 
+**Solution File:** `StudentProgressTracker.sln` (unified solution containing all projects)
+
 ```
 StudentProgressTracker/
-├── StudentProgressTracker/          # .NET MAUI Client Application
+├── StudentProgressTracker.sln      # Unified solution file (all 4 projects)
+├── StudentLifeTracker.Shared/       # Shared DTOs library (.NET 8.0)
+│   └── DTOs/                       # Data transfer objects
+├── StudentLifeTracker.API/          # ASP.NET Core Web API (.NET 8.0)
+│   ├── Controllers/                 # API endpoints
+│   ├── Models/                     # Entity models
+│   ├── Services/                   # Business services
+│   ├── Data/                       # DbContext
+│   └── appsettings.json            # Configuration
+├── StudentProgressTracker/          # .NET MAUI Client Application (.NET 9.0)
 │   ├── Models/                      # Data models
 │   ├── ViewModels/                  # MVVM ViewModels
 │   ├── Views/                       # XAML pages
 │   ├── Services/                    # Business logic services
 │   ├── Helpers/                     # Utility classes
 │   └── Resources/                   # Images, fonts, styles
-├── StudentLifeTracker.API/          # ASP.NET Core Web API
-│   ├── Controllers/                 # API endpoints
-│   ├── Models/                     # Entity models
-│   ├── Services/                   # Business services
-│   ├── Data/                       # DbContext
-│   └── appsettings.json            # Configuration
-├── StudentLifeTracker.Shared/       # Shared DTOs library
-│   └── DTOs/                       # Data transfer objects
-└── StudentProgressTracker.Tests/    # xUnit test project
+└── StudentProgressTracker.Tests/    # xUnit test project (.NET 8.0)
     ├── Controllers/                # Controller tests
-    ├── Services/                   # Service tests
-    └── Helpers/                    # Test utilities
+    ├── Helpers/                    # Test utilities
+    └── README.md                   # Test documentation
 ```
+
+**Solution Organization:**
+- All 4 projects are contained in a single unified solution file
+- Projects are organized by dependency hierarchy (Shared → API → Client → Tests)
+- Test project references both API and Shared projects
 
 ## Setup Instructions
 
@@ -426,16 +434,26 @@ git clone <repository-url>
 cd "D424 Capstone"
 ```
 
-### 2. Restore NuGet Packages
+### 2. Open the Solution
+
+Open `StudentProgressTracker.sln` in Visual Studio 2022.
+
+**Note:** This is the unified solution file containing all 4 projects:
+- StudentLifeTracker.Shared (DTOs library)
+- StudentLifeTracker.API (Web API)
+- StudentProgressTracker (MAUI Client)
+- StudentProgressTracker.Tests (Test project)
+
+### 3. Restore NuGet Packages
 
 ```bash
-dotnet restore
+dotnet restore StudentProgressTracker.sln
 ```
 
 Or restore from Visual Studio:
 - Right-click the solution → **Restore NuGet Packages**
 
-### 3. Configure the API
+### 4. Configure the API
 
 #### Database Connection
 
@@ -472,7 +490,7 @@ Update JWT configuration in `appsettings.json`:
 
 **Important:** Change the `SecretKey` to a secure random string in production!
 
-### 4. Configure the Client
+### 5. Configure the Client
 
 The client is configured to use the Azure-hosted API by default:
 
@@ -485,7 +503,7 @@ For local development, you can change this to:
 private readonly string _baseUrl = "https://localhost:7119"; // Local development
 ```
 
-### 5. Initialize the Database
+### 6. Initialize the Database
 
 The API will automatically create the database on first run using `EnsureCreated()`. For production, use Entity Framework migrations:
 
@@ -497,15 +515,21 @@ dotnet ef database update
 
 ## Running the Application
 
-### Step 1: Start the API
+### Step 1: Open the Solution
 
-1. Open the solution in Visual Studio
-2. Set `StudentLifeTracker.API` as the startup project
-3. Press F5 or click **Run**
-4. The API will start on `https://localhost:7119` (or the port configured in `launchSettings.json`)
-5. Swagger UI will be available at `https://localhost:7119/swagger`
+1. Open `StudentProgressTracker.sln` in Visual Studio
+   - **Note:** This is the unified solution file containing all 4 projects
+   - The solution includes: Shared library, API, MAUI Client, and Test project
+2. Verify all projects load correctly in Solution Explorer
 
-### Step 2: Run the Client Application
+### Step 2: Start the API
+
+1. Set `StudentLifeTracker.API` as the startup project
+2. Press F5 or click **Run**
+3. The API will start on `https://localhost:7119` (or the port configured in `launchSettings.json`)
+4. Swagger UI will be available at `https://localhost:7119/swagger`
+
+### Step 3: Run the Client Application
 
 1. Set `StudentProgressTracker` as the startup project
 2. Select your target platform:
@@ -588,6 +612,23 @@ dotnet ef database update
 - Added delete functionality for Income and Expense entries
 - Financial Overview page automatically refreshes when navigating back to it
 
+## Maintenance Guide (Developer Guide)
+
+A comprehensive **Maintenance Guide (Developer Guide)** is available for developers who will maintain or extend the codebase. This guide includes:
+
+- **Introduction** - Overview for developers maintaining the code
+- **Prerequisites** - Required tools, Azure account, and database setup
+- **Repository Setup** - Clone instructions and dependency restoration
+- **Database Configuration** - LocalDB for development, Azure SQL for production
+- **API Configuration** - JWT settings, user secrets, Swagger setup
+- **MAUI App Configuration** - API URL configuration, platform-specific setup
+- **Running Tests** - xUnit test execution and coverage
+- **Deployment to Azure** - Step-by-step Azure deployment procedures
+- **Troubleshooting** - Common errors and solutions
+- **Maintenance Tasks** - Regular updates, security, monitoring
+
+The maintenance guide is formatted for Microsoft Word and provides detailed, technical instructions for setting up and maintaining the project.
+
 ## Project Deliverables
 
 Project deliverables for the Student Progress Tracker application support planning, quality assurance, and long-term maintainability throughout the development lifecycle. These artifacts provide structure for development activities while ensuring the application can be tested, deployed, and maintained effectively.
@@ -625,6 +666,15 @@ Project deliverables for the Student Progress Tracker application support planni
   - Deployment and scalability considerations
   - Technology stack and dependencies
 
+**Maintenance Guide (Developer Guide)**
+- Comprehensive 2-3 page maintenance guide for developers
+- Detailed setup and configuration instructions
+- Database configuration (LocalDB and Azure SQL)
+- API and MAUI app configuration procedures
+- Azure deployment step-by-step guide
+- Troubleshooting common issues
+- Regular maintenance tasks and best practices
+
 **Interactive API Documentation**
 - **Swagger/OpenAPI** documentation available when backend service is running
 - Accessible at `/swagger` endpoint in development mode
@@ -654,6 +704,7 @@ All documentation is maintained in the project repository:
 - `README.md` - User-facing setup and configuration guide (this file)
 - `TECHNICAL_OVERVIEW.md` - Comprehensive technical architecture documentation
 - `StudentProgressTracker.Tests/README.md` - Test suite documentation and coverage details
+- **Maintenance Guide (Developer Guide)** - Comprehensive maintenance and setup guide for developers (see Support section)
 
 ## Development Timeline
 
@@ -803,12 +854,25 @@ For technical questions or issues:
 - Review inline code comments for implementation details
 - See `StudentProgressTracker.Tests/README.md` for test documentation
 
+## Maintenance Guide
+
+For developers maintaining or extending the codebase, see the **Maintenance Guide (Developer Guide)** which includes:
+- Detailed setup instructions for new developers
+- Database configuration (LocalDB and Azure SQL)
+- API and MAUI app configuration
+- Running and debugging tests
+- Azure deployment procedures
+- Troubleshooting common issues
+- Regular maintenance tasks and best practices
+
+The maintenance guide provides comprehensive instructions for setting up the development environment, configuring databases, deploying to Azure, and maintaining the application over time.
+
 ## Version
 
 - **Application Version:** 1.1
 - **.NET MAUI:** 9.0.0
 - **ASP.NET Core:** 8.0.0
-- **Last Updated:** December 28, 2025
+- **Last Updated:** December 2025
 
 ---
 

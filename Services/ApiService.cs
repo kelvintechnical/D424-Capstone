@@ -9,31 +9,26 @@ public class ApiService
 {
     private readonly HttpClient _httpClient;
     // TODO: Move to configuration (appsettings.json or Preferences) for production
-    private readonly string _baseUrl = "https://spt-api-v2-defjczgvg9bgbcaw.eastus2-01.azurewebsites.net";
+    private readonly string _baseUrl = "https://spt-api-v2-defjczgvg9bgbcaw.eastus2-01.azurewebsites.net/";
+                                                                                                   
     private const string TokenKey = "auth_token";
     private const string RefreshTokenKey = "refresh_token";
     private const string UserKey = "user_data";
 
     public ApiService()
     {
-        _httpClient = new HttpClient
+        var handler = new HttpClientHandler();
+
+#if DEBUG
+        // Ignore SSL certificate errors for localhost (development only)
+        handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+#endif
+
+        _httpClient = new HttpClient(handler)
         {
-            //BaseAddress = new Uri(_baseUrl),
             BaseAddress = new Uri("https://spt-api-v2-defjczgvg9bgbcaw.eastus2-01.azurewebsites.net/"),
             Timeout = TimeSpan.FromSeconds(30)
         };
-
-        // Ignore SSL certificate errors for localhost (development only)
-#if DEBUG
-        _httpClient = new HttpClient(new HttpClientHandler
-        {
-            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
-        })
-        {
-            BaseAddress = new Uri(_baseUrl),
-            Timeout = TimeSpan.FromSeconds(30)
-        };
-#endif
 
         // Load token if exists
         _ = LoadTokenAsync();

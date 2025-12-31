@@ -599,12 +599,13 @@ Based on file modification history:
 
 **Component Breakdown:**
 - **100+ source files** (.cs, .xaml)
-- **4 projects:** MAUI Client, Web API, Shared Library, Solution files
+- **1 unified solution file:** `StudentProgressTracker.sln` containing all 4 projects
+- **4 projects:** Shared Library, Web API, MAUI Client, Test Project
 - **15 DTOs** for type-safe API communication
 - **10+ ViewModels** following MVVM pattern
 - **10+ Pages** with XAML-based UI
 - **7 Services** for business logic separation
-- **4 API Controllers** with RESTful endpoints
+- **8 API Controllers** with RESTful endpoints
 - **2 databases:** SQLite (client) and SQL Server (server)
 
 **Key Features Implemented:**
@@ -716,7 +717,9 @@ All dependencies use permissive open-source licenses:
 - XML documentation on public APIs and methods
 - Swagger/OpenAPI specification for API
 - Configuration examples in appsettings files
-- README files can be added for additional context
+- README.md - User-facing setup and configuration guide
+- **Maintenance Guide (Developer Guide)** - Comprehensive maintenance and setup guide for developers
+- StudentProgressTracker.Tests/README.md - Test suite documentation
 
 ### Testability
 - Service-based architecture enables easy unit testing
@@ -731,6 +734,7 @@ All dependencies use permissive open-source licenses:
 - Configuration-based settings (no hard-coded values)
 - Version tracking via assembly versions
 - Database migrations for schema updates
+- **Maintenance Guide** available for developers with detailed setup, deployment, and troubleshooting procedures
 
 ---
 
@@ -926,9 +930,17 @@ For questions about the technical implementation, architecture decisions, or to 
 **Documentation Location:** `C:\Users\Kelvint\WGU\D424 Capstone`
 
 **Project Structure:**
+- **Solution File:** `StudentProgressTracker.sln` (unified solution containing all 4 projects)
 - Main Application: `StudentProgressTracker` (MAUI Client)
 - API Backend: `StudentLifeTracker.API`
 - Shared Library: `StudentLifeTracker.Shared`
+- Test Project: `StudentProgressTracker.Tests` (30 unit tests)
+
+**Documentation:**
+- `README.md` - User-facing setup and configuration guide
+- `TECHNICAL_OVERVIEW.md` - Comprehensive technical architecture documentation (this document)
+- **Maintenance Guide (Developer Guide)** - Detailed maintenance and setup guide for developers
+- `StudentProgressTracker.Tests/README.md` - Test suite documentation
 
 This document provides a comprehensive technical overview suitable for due diligence, technical evaluation, and investment decision-making.
 
@@ -978,10 +990,23 @@ This document provides a comprehensive technical overview suitable for due dilig
 - Fixed date comparison logic in `GetSummary`, `GetIncomes`, and `GetExpenses` endpoints to handle date-only queries correctly
 - Improved error handling and user feedback for financial operations
 
+### Solution Consolidation (December 29, 2025)
+- **Unified Solution File:** Consolidated two solution files into a single `StudentProgressTracker.sln`
+- **Solution Structure:** All 4 projects (Shared, API, Client, Tests) now in one unified solution
+- **Project Organization:** Projects organized by dependency hierarchy for clarity
+- **Build Verification:** All projects build successfully and all 30 tests pass
+
+### Documentation Updates (December 2025)
+- **Maintenance Guide (Developer Guide):** Comprehensive 2-3 page maintenance guide created for developers
+  - Includes detailed setup instructions, database configuration, API/MAUI configuration
+  - Azure deployment procedures and troubleshooting guide
+  - Regular maintenance tasks and best practices
+  - Ready for Microsoft Word formatting
+
 ---
 
-*Document Version: 1.2*  
-*Last Updated: December 28, 2025*  
+*Document Version: 1.4*  
+*Last Updated: December 2025*  
 *Created for: Potential purchaser technical evaluation*
 
 

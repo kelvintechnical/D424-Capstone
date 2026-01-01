@@ -83,3 +83,4 @@ _ReSharper*/
 
 # Mac files
 .DS_Store
+/StudentLifeTracker.API/Properties

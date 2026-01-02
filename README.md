@@ -540,11 +540,21 @@ dotnet ef database update
 
 ### First-Time Setup
 
-1. **Register a new account** using the Register page
+1. **Create an account** using one of the following methods:
+   - **Option A:** Register through the app's Register page
+   - **Option B:** Use Swagger UI at `https://localhost:7119/swagger` and call `POST /api/auth/register` with your email, name, and password
+   - **Note:** Password must be at least 6 characters with at least one digit, one lowercase, and one uppercase letter
 2. **Login** with your credentials
 3. **Create an academic term** to get started
 4. **Add courses** to your term
 5. **Add assessments** to your courses
+
+**Test Account (Optional):**
+If you have access to a pre-configured test account, you can use:
+- Email: `kelvin@test.com`
+- Password: `Test123!`
+
+Otherwise, create your own account using the methods above.
 
 ## API Endpoints
 
@@ -612,22 +622,16 @@ dotnet ef database update
 - Added delete functionality for Income and Expense entries
 - Financial Overview page automatically refreshes when navigating back to it
 
-## Maintenance Guide (Developer Guide)
+## Additional Documentation
 
-A comprehensive **Maintenance Guide (Developer Guide)** is available for developers who will maintain or extend the codebase. This guide includes:
+For developers maintaining or extending the codebase, the following documentation is available:
 
-- **Introduction** - Overview for developers maintaining the code
-- **Prerequisites** - Required tools, Azure account, and database setup
-- **Repository Setup** - Clone instructions and dependency restoration
-- **Database Configuration** - LocalDB for development, Azure SQL for production
-- **API Configuration** - JWT settings, user secrets, Swagger setup
-- **MAUI App Configuration** - API URL configuration, platform-specific setup
-- **Running Tests** - xUnit test execution and coverage
-- **Deployment to Azure** - Step-by-step Azure deployment procedures
-- **Troubleshooting** - Common errors and solutions
-- **Maintenance Tasks** - Regular updates, security, monitoring
+- **TECHNICAL_OVERVIEW.md** - Comprehensive technical architecture documentation
+- **WIREFRAMES.md** - UI/UX wireframes and navigation structure
+- **UPDATE_DATABASE.md** - Database schema update instructions
+- **StudentProgressTracker.Tests/README.md** - Test suite documentation and coverage details
 
-The maintenance guide is formatted for Microsoft Word and provides detailed, technical instructions for setting up and maintaining the project.
+Setup and configuration instructions are also covered in the [Setup Instructions](#setup-instructions) and [Troubleshooting](#troubleshooting) sections of this README.
 
 ## Project Deliverables
 
@@ -666,14 +670,9 @@ Project deliverables for the Student Progress Tracker application support planni
   - Deployment and scalability considerations
   - Technology stack and dependencies
 
-**Maintenance Guide (Developer Guide)**
-- Comprehensive 2-3 page maintenance guide for developers
-- Detailed setup and configuration instructions
-- Database configuration (LocalDB and Azure SQL)
-- API and MAUI app configuration procedures
-- Azure deployment step-by-step guide
-- Troubleshooting common issues
-- Regular maintenance tasks and best practices
+**Additional Documentation Files**
+- `WIREFRAMES.md` - UI/UX wireframes and navigation structure
+- `UPDATE_DATABASE.md` - Database schema update instructions and migration guidance
 
 **Interactive API Documentation**
 - **Swagger/OpenAPI** documentation available when backend service is running
@@ -703,8 +702,9 @@ Project deliverables for the Student Progress Tracker application support planni
 All documentation is maintained in the project repository:
 - `README.md` - User-facing setup and configuration guide (this file)
 - `TECHNICAL_OVERVIEW.md` - Comprehensive technical architecture documentation
+- `WIREFRAMES.md` - UI/UX wireframes and navigation structure
+- `UPDATE_DATABASE.md` - Database schema update instructions
 - `StudentProgressTracker.Tests/README.md` - Test suite documentation and coverage details
-- **Maintenance Guide (Developer Guide)** - Comprehensive maintenance and setup guide for developers (see Support section)
 
 ## Development Timeline
 
@@ -850,22 +850,17 @@ This project uses open-source dependencies with permissive licenses:
 
 For technical questions or issues:
 - Review the `TECHNICAL_OVERVIEW.md` for detailed architecture documentation
-- Check Swagger UI at `/swagger` for API documentation
+- Check Swagger UI at `/swagger` for API documentation and interactive testing
 - Review inline code comments for implementation details
 - See `StudentProgressTracker.Tests/README.md` for test documentation
+- Check `WIREFRAMES.md` for UI/UX design reference
+- See `UPDATE_DATABASE.md` for database migration instructions
 
-## Maintenance Guide
-
-For developers maintaining or extending the codebase, see the **Maintenance Guide (Developer Guide)** which includes:
-- Detailed setup instructions for new developers
-- Database configuration (LocalDB and Azure SQL)
-- API and MAUI app configuration
-- Running and debugging tests
-- Azure deployment procedures
-- Troubleshooting common issues
-- Regular maintenance tasks and best practices
-
-The maintenance guide provides comprehensive instructions for setting up the development environment, configuring databases, deploying to Azure, and maintaining the application over time.
+For developers maintaining or extending the codebase:
+- Setup and configuration instructions are in the [Setup Instructions](#setup-instructions) section
+- Database configuration details are in [Configure the API](#4-configure-the-api)
+- Test execution instructions are in the [Testing](#testing) section
+- Troubleshooting guidance is in the [Troubleshooting](#troubleshooting) section
 
 ## Version
 
